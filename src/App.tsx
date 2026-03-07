@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { DemoProvider } from "@/hooks/useDemo";
 import { I18nProvider } from "@/hooks/useI18n";
+import { MenuConfigProvider } from "@/hooks/useMenuConfig";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
 import Index from "./pages/Index";
@@ -33,6 +34,7 @@ const App = () => (
         <DemoProvider>
         <AuthProvider>
         <I18nProvider>
+        <MenuConfigProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
@@ -59,6 +61,7 @@ const App = () => (
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+        </MenuConfigProvider>
         </I18nProvider>
         </AuthProvider>
         </DemoProvider>

@@ -146,6 +146,16 @@ const translations = {
   "areas.section.reduce": { en: "Reduce", it: "Riduci" },
   "areas.section.finance": { en: "Finance", it: "Finanze" },
   "areas.add": { en: "+ Add", it: "+ Aggiungi" },
+
+  // Menu settings
+  "settings.menu": { en: "Menu", it: "Menu" },
+  "settings.menu.fixed": { en: "fixed", it: "fisso" },
+  "settings.menu.finance": { en: "Finance", it: "Finanze" },
+  "settings.menu.gym": { en: "Gym", it: "Palestra" },
+  "settings.menu.maxReached": { en: "Max 2 custom items active", it: "Max 2 voci personalizzate attive" },
+
+  // Nav
+  "nav.gym": { en: "Gym", it: "Palestra" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

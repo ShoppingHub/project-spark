@@ -1,13 +1,13 @@
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
-import { LayoutDashboard, Layers, BarChart2, Settings } from "lucide-react";
+import { LayoutDashboard, Layers, BarChart2, Settings, Dumbbell } from "lucide-react";
 import { useI18n } from "@/hooks/useI18n";
+import { useMenuConfig } from "@/hooks/useMenuConfig";
 import type { TranslationKey } from "@/i18n/translations";
 
-export const navItems: { to: string; icon: typeof LayoutDashboard; labelKey: TranslationKey }[] = [
+export const fixedNavItems: { to: string; icon: typeof LayoutDashboard; labelKey: TranslationKey }[] = [
   { to: "/", icon: LayoutDashboard, labelKey: "nav.home" },
   { to: "/areas", icon: Layers, labelKey: "nav.areas" },
-  { to: "/finance", icon: BarChart2, labelKey: "nav.finance" },
 ];
 
 export const settingsItem = { to: "/settings", icon: Settings, labelKey: "nav.settings" as TranslationKey };
@@ -15,7 +15,18 @@ export const settingsItem = { to: "/settings", icon: Settings, labelKey: "nav.se
 export function BottomNav() {
   const location = useLocation();
   const { t } = useI18n();
-  const allTabs = [...navItems, settingsItem];
+  const { customItems, gymAreaId } = useMenuConfig();
+
+  const dynamicItems: { to: string; icon: typeof BarChart2; labelKey: TranslationKey }[] = [];
+  for (const item of customItems) {
+    if (item === "finance") {
+      dynamicItems.push({ to: "/finance", icon: BarChart2, labelKey: "nav.finance" });
+    } else if (item === "gym" && gymAreaId) {
+      dynamicItems.push({ to: `/areas/${gymAreaId}`, icon: Dumbbell, labelKey: "nav.gym" });
+    }
+  }
+
+  const allTabs = [...fixedNavItems, ...dynamicItems, settingsItem];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-14 items-center bg-[#0F2F33] lg:hidden">

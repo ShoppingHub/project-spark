@@ -125,6 +125,7 @@ export type Database = {
           created_at: string
           id: string
           language: string
+          menu_custom_items: string[]
           settings_notifications: boolean
           settings_score_visible: boolean
           updated_at: string
@@ -134,6 +135,7 @@ export type Database = {
           created_at?: string
           id?: string
           language?: string
+          menu_custom_items?: string[]
           settings_notifications?: boolean
           settings_score_visible?: boolean
           updated_at?: string
@@ -143,6 +145,7 @@ export type Database = {
           created_at?: string
           id?: string
           language?: string
+          menu_custom_items?: string[]
           settings_notifications?: boolean
           settings_score_visible?: boolean
           updated_at?: string
