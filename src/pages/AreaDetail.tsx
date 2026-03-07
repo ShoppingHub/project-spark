@@ -8,6 +8,7 @@ import { ArrowLeft, TrendingUp } from "lucide-react";
 import { TimeRangeSelector, type TimeRange } from "@/components/TimeRangeSelector";
 import { AreaTypePill } from "@/components/AreaTypePill";
 import { CalendarHeatmap } from "@/components/CalendarHeatmap";
+import { GymCard } from "@/components/GymCard";
 import { motion } from "framer-motion";
 import { subDays, format } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
