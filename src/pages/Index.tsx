@@ -102,11 +102,15 @@ const Index = () => {
     fetchData();
   }, [fetchData]);
 
+  const [checkInError, setCheckInError] = useState("");
+
   const handleCheckIn = async (areaId: string) => {
     if (!user) return;
     setCheckInLoading((prev) => ({ ...prev, [areaId]: true }));
+    setCheckInError("");
 
     try {
+      // 1. Save check-in
       const { error } = await supabase.from("checkins").upsert(
         {
           area_id: areaId,
@@ -117,11 +121,35 @@ const Index = () => {
         { onConflict: "area_id,date" }
       );
 
-      if (!error) {
-        setTodayCheckins((prev) => ({ ...prev, [areaId]: true }));
+      if (error) throw error;
+
+      // 2. Calculate score
+      const { data: sessionData } = await supabase.auth.getSession();
+      await supabase.functions.invoke("calculate-score", {
+        body: { area_id: areaId, date: today },
+        headers: { Authorization: `Bearer ${sessionData.session?.access_token}` },
+      });
+
+      // 3. Update UI
+      setTodayCheckins((prev) => ({ ...prev, [areaId]: true }));
+
+      // 4. Refresh score data for this area
+      const startDate = format(subDays(new Date(), rangeToDays[timeRange]), "yyyy-MM-dd");
+      const { data: newScores } = await supabase
+        .from("score_daily")
+        .select("*")
+        .eq("area_id", areaId)
+        .gte("date", startDate)
+        .order("date", { ascending: true });
+
+      if (newScores) {
+        setScores((prev) => ({
+          ...prev,
+          [areaId]: newScores.map((s) => ({ date: s.date, score: s.cumulative_score })),
+        }));
       }
     } catch {
-      // silent
+      setCheckInError("Something went wrong. Please try again.");
     } finally {
       setCheckInLoading((prev) => ({ ...prev, [areaId]: false }));
     }
@@ -179,6 +207,9 @@ const Index = () => {
               checkInLoading={!!checkInLoading[area.id]}
             />
           ))}
+          {checkInError && (
+            <p className="text-sm text-destructive text-center pb-2">{checkInError}</p>
+          )}
         </motion.div>
       )}
     </div>
