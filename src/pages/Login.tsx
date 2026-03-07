@@ -1,23 +1,30 @@
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
-import { Mail, AlertCircle, Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 
 const emailSchema = z.string().email();
 
-type Screen = "welcome" | "check-email" | "link-expired";
+type Tab = "login" | "signup";
+type Screen = "auth" | "check-email" | "forgot";
 
 const Login = () => {
   const { session, loading } = useAuth();
-  const [screen, setScreen] = useState<Screen>("welcome");
+  const [screen, setScreen] = useState<Screen>("auth");
+  const [tab, setTab] = useState<Tab>("login");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
-  const [magicLinkLoading, setMagicLinkLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
   const [genericError, setGenericError] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   if (loading) {
     return (
@@ -31,44 +38,106 @@ const Login = () => {
     return <Navigate to="/" replace />;
   }
 
-  const validateEmail = (value: string): boolean => {
-    const result = emailSchema.safeParse(value);
-    if (!result.success) {
+  const clearErrors = () => {
+    setEmailError("");
+    setPasswordError("");
+    setGenericError("");
+  };
+
+  const validateEmail = (v: string) => {
+    if (!emailSchema.safeParse(v).success) {
       setEmailError("Please enter a valid email address.");
       return false;
     }
-    setEmailError("");
     return true;
   };
 
-  const handleSendMagicLink = async () => {
-    if (!validateEmail(email)) return;
-    setMagicLinkLoading(true);
-    setGenericError("");
+  const validatePassword = (v: string) => {
+    if (v.length < 6) {
+      setPasswordError("Password must be at least 6 characters.");
+      return false;
+    }
+    return true;
+  };
+
+  // Sign up
+  const handleSignUp = async () => {
+    clearErrors();
+    if (!validateEmail(email) || !validatePassword(password)) return;
+    setAuthLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signUp({
         email,
-        options: { emailRedirectTo: window.location.origin },
+        password,
+        options: { emailRedirectTo: window.location.origin + "/auth/callback" },
       });
       if (error) {
-        setGenericError("Something went wrong. Please try again.");
+        if (error.message.includes("already registered") || error.message.includes("already been registered")) {
+          setGenericError("An account with this email already exists. Try logging in.");
+        } else {
+          setGenericError("Something went wrong. Please try again.");
+        }
       } else {
         setScreen("check-email");
       }
     } catch {
       setGenericError("Something went wrong. Please try again.");
     } finally {
-      setMagicLinkLoading(false);
+      setAuthLoading(false);
     }
   };
 
-  const handleResend = async () => {
-    setMagicLinkLoading(true);
+  // Log in
+  const handleLogin = async () => {
+    clearErrors();
+    if (!validateEmail(email)) return;
+    if (!password) {
+      setPasswordError("Please enter your password.");
+      return;
+    }
+    setAuthLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setGenericError("Invalid email or password.");
+      }
+    } catch {
+      setGenericError("Something went wrong. Please try again.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // Forgot password
+  const handleForgotPassword = async () => {
+    clearErrors();
+    if (!validateEmail(email)) return;
+    setForgotLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + "/reset-password",
+      });
+      if (error) {
+        setGenericError("Something went wrong. Please try again.");
+      } else {
+        setForgotSent(true);
+      }
+    } catch {
+      setGenericError("Something went wrong. Please try again.");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  // Resend verification
+  const handleResendVerification = async () => {
+    setAuthLoading(true);
     setGenericError("");
     try {
-      const { error } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.resend({
+        type: "signup",
         email,
-        options: { emailRedirectTo: window.location.origin },
+        options: { emailRedirectTo: window.location.origin + "/auth/callback" },
       });
       if (error) {
         setGenericError("Something went wrong. Please try again.");
@@ -76,10 +145,11 @@ const Login = () => {
     } catch {
       setGenericError("Something went wrong. Please try again.");
     } finally {
-      setMagicLinkLoading(false);
+      setAuthLoading(false);
     }
   };
 
+  // Google
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     setGenericError("");
@@ -88,11 +158,8 @@ const Login = () => {
         redirect_uri: window.location.origin,
       });
       if (result.error) {
-        const errMsg = result.error?.message || "";
-        // User cancelled — no error shown
-        if (errMsg.includes("cancelled") || errMsg.includes("closed") || errMsg.includes("popup")) {
-          // silent
-        } else {
+        const msg = result.error?.message || "";
+        if (!msg.includes("cancelled") && !msg.includes("closed") && !msg.includes("popup")) {
           setGenericError("Google login failed. Please try again.");
         }
       }
@@ -108,71 +175,80 @@ const Login = () => {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center px-4 max-w-[428px] mx-auto">
         <div className="flex flex-col items-center gap-6 w-full">
-          <Mail size={48} className="text-primary" strokeWidth={1.5} />
           <div className="text-center space-y-2">
-            <h1 className="text-[28px] font-semibold leading-[1.2]">Check your email.</h1>
+            <h1 className="text-[28px] font-semibold leading-[1.2]">Check your email</h1>
             <p className="text-sm text-muted-foreground">
-              We sent you a magic link to
+              We sent a verification link to
             </p>
             <p className="text-sm font-medium">{email}</p>
           </div>
           <button
-            onClick={handleResend}
-            disabled={magicLinkLoading}
+            onClick={handleResendVerification}
+            disabled={authLoading}
             className="text-sm text-primary underline underline-offset-4 hover:opacity-80 disabled:opacity-50"
           >
-            {magicLinkLoading ? "Sending..." : "Didn't get it? Send again"}
+            {authLoading ? "Sending..." : "Didn't get it? Send again"}
           </button>
-          {genericError && (
-            <p className="text-sm text-destructive">{genericError}</p>
-          )}
+          <button
+            onClick={() => { setScreen("auth"); clearErrors(); }}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Back to login
+          </button>
+          {genericError && <p className="text-sm text-destructive">{genericError}</p>}
         </div>
       </div>
     );
   }
 
-  // Link expired screen
-  if (screen === "link-expired") {
+  // Forgot password screen
+  if (screen === "forgot") {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center px-4 max-w-[428px] mx-auto">
         <div className="flex flex-col items-center gap-6 w-full">
-          <AlertCircle size={48} className="text-graph-decline" strokeWidth={1.5} />
-          <h1 className="text-[28px] font-semibold leading-[1.2] text-center">
-            This link has expired or is invalid.
-          </h1>
-          <div className="w-full space-y-3">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
-              placeholder="your@email.com"
-              className="w-full h-12 rounded-xl bg-card px-4 text-base text-foreground placeholder:text-muted-foreground outline-none ring-1 ring-border focus:ring-primary transition-colors"
-            />
-            {emailError && (
-              <p className="text-sm text-destructive">{emailError}</p>
-            )}
-            <button
-              onClick={() => {
-                if (validateEmail(email)) {
-                  handleSendMagicLink();
-                }
-              }}
-              disabled={magicLinkLoading || !email}
-              className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-medium text-base flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50 transition-opacity min-h-[44px]"
-            >
-              {magicLinkLoading && <Loader2 size={18} className="animate-spin" />}
-              Send a new link
-            </button>
+          <div className="text-center space-y-2">
+            <h1 className="text-[28px] font-semibold leading-[1.2]">Reset password</h1>
+            <p className="text-sm text-muted-foreground">
+              {forgotSent
+                ? "Check your email for a reset link."
+                : "Enter your email and we'll send you a reset link."}
+            </p>
           </div>
-          {genericError && (
-            <p className="text-sm text-destructive">{genericError}</p>
+          {!forgotSent && (
+            <div className="w-full space-y-3">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
+                placeholder="your@email.com"
+                className="w-full h-12 rounded-xl bg-card px-4 text-base text-foreground placeholder:text-muted-foreground outline-none ring-1 ring-border focus:ring-primary transition-colors"
+              />
+              {emailError && <p className="text-sm text-destructive">{emailError}</p>}
+              <button
+                onClick={handleForgotPassword}
+                disabled={forgotLoading || !email}
+                className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-medium text-base flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50 transition-opacity min-h-[44px]"
+              >
+                {forgotLoading && <Loader2 size={18} className="animate-spin" />}
+                Send reset link
+              </button>
+            </div>
           )}
+          <button
+            onClick={() => { setScreen("auth"); setForgotSent(false); clearErrors(); }}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Back to login
+          </button>
+          {genericError && <p className="text-sm text-destructive">{genericError}</p>}
         </div>
       </div>
     );
   }
 
-  // Welcome screen (default)
+  // Main auth screen
+  const isLogin = tab === "login";
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 max-w-[428px] mx-auto">
       <div className="flex flex-col items-center gap-8 w-full">
@@ -182,7 +258,23 @@ const Login = () => {
           <p className="text-sm text-muted-foreground">Observe your direction.</p>
         </div>
 
-        {/* Email + Magic Link */}
+        {/* Tabs */}
+        <div className="flex w-full rounded-xl bg-card ring-1 ring-border overflow-hidden">
+          <button
+            onClick={() => { setTab("login"); clearErrors(); }}
+            className={`flex-1 h-11 text-sm font-medium transition-colors ${isLogin ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Log in
+          </button>
+          <button
+            onClick={() => { setTab("signup"); clearErrors(); }}
+            className={`flex-1 h-11 text-sm font-medium transition-colors ${!isLogin ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Sign up
+          </button>
+        </div>
+
+        {/* Form */}
         <div className="w-full space-y-3">
           <input
             type="email"
@@ -191,17 +283,44 @@ const Login = () => {
             placeholder="your@email.com"
             className="w-full h-12 rounded-xl bg-card px-4 text-base text-foreground placeholder:text-muted-foreground outline-none ring-1 ring-border focus:ring-primary transition-colors"
           />
-          {emailError && (
-            <p className="text-sm text-destructive">{emailError}</p>
-          )}
+          {emailError && <p className="text-sm text-destructive">{emailError}</p>}
+
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setPasswordError(""); setGenericError(""); }}
+              placeholder={isLogin ? "Password" : "Create a password (min 6 chars)"}
+              className="w-full h-12 rounded-xl bg-card px-4 pr-12 text-base text-foreground placeholder:text-muted-foreground outline-none ring-1 ring-border focus:ring-primary transition-colors"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+          {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
+
           <button
-            onClick={handleSendMagicLink}
-            disabled={!email || magicLinkLoading}
+            onClick={isLogin ? handleLogin : handleSignUp}
+            disabled={!email || !password || authLoading}
             className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-medium text-base flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50 transition-opacity min-h-[44px]"
           >
-            {magicLinkLoading && <Loader2 size={18} className="animate-spin" />}
-            Send me a link
+            {authLoading && <Loader2 size={18} className="animate-spin" />}
+            {isLogin ? "Log in" : "Create account"}
           </button>
+
+          {isLogin && (
+            <button
+              onClick={() => { setScreen("forgot"); clearErrors(); }}
+              className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors text-center py-1"
+            >
+              Forgot password?
+            </button>
+          )}
         </div>
 
         {/* Divider */}
@@ -229,9 +348,6 @@ const Login = () => {
           )}
           Continue with Google
         </button>
-
-        {/* Caption */}
-        <p className="text-xs text-muted-foreground">No password needed.</p>
 
         {genericError && (
           <p className="text-sm text-destructive text-center">{genericError}</p>
