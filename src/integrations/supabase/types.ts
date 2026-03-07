@@ -82,6 +82,82 @@ export type Database = {
           },
         ]
       }
+      gym_exercises: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          order: number
+          reps: number
+          session_id: string
+          sets: number
+          weight_kg: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          order?: number
+          reps: number
+          session_id: string
+          sets: number
+          weight_kg?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          order?: number
+          reps?: number
+          session_id?: string
+          sets?: number
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gym_exercises_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "gym_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gym_sessions: {
+        Row: {
+          area_id: string
+          created_at: string
+          date: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          area_id: string
+          created_at?: string
+          date: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          area_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gym_sessions_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       score_daily: {
         Row: {
           area_id: string
