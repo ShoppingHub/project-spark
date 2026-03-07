@@ -37,9 +37,14 @@ const Login = () => {
     );
   }
 
-  if (session) {
+  if (session || isDemo) {
     return <Navigate to="/" replace />;
   }
+
+  const handleDemo = () => {
+    enableDemo();
+    navigate("/", { replace: true });
+  };
 
   const clearErrors = () => {
     setEmailError("");
