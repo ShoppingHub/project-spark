@@ -8,6 +8,7 @@ import { ArrowLeft, TrendingUp } from "lucide-react";
 import { TimeRangeSelector, type TimeRange } from "@/components/TimeRangeSelector";
 import { AreaTypePill } from "@/components/AreaTypePill";
 import { CalendarHeatmap } from "@/components/CalendarHeatmap";
+import { GymCard } from "@/components/GymCard";
 import { motion } from "framer-motion";
 import { subDays, format } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
@@ -134,6 +135,27 @@ export default function AreaDetail() {
   }
 
   const hasData = scores.length > 0 && scores.some((s) => s.score !== 0);
+  const isGymArea = area.type === "health" && /^(gym|palestra)$/i.test(area.name);
+
+  const handleAutoCheckIn = async () => {
+    if (!user || !id || todayCheckedIn) return;
+    try {
+      await supabase.from("checkins").upsert(
+        { area_id: id, user_id: user.id, date: today, completed: true },
+        { onConflict: "area_id,date" }
+      );
+      const { data: sessionData } = await supabase.auth.getSession();
+      await supabase.functions.invoke("calculate-score", {
+        body: { area_id: id, date: today },
+        headers: { Authorization: `Bearer ${sessionData.session?.access_token}` },
+      });
+      setTodayCheckedIn(true);
+      setCheckinMap((prev) => ({ ...prev, [today]: true }));
+      const startDate = format(subDays(new Date(), rangeToDays[timeRange]), "yyyy-MM-dd");
+      const { data: newScores } = await supabase.from("score_daily").select("*").eq("area_id", id).gte("date", startDate).order("date", { ascending: true });
+      if (newScores) { setScores(newScores.map((s) => ({ date: s.date, score: s.cumulative_score }))); }
+    } catch { /* silent */ }
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeInOut" }} className="flex flex-col px-4 pt-2 pb-8">
@@ -185,6 +207,12 @@ export default function AreaDetail() {
         </div>
       )}
       {checkInError && <p className="mt-2 text-sm text-destructive text-center">{checkInError}</p>}
+
+      {/* Gym Card */}
+      {!isDemo && isGymArea && id && (
+        <GymCard areaId={id} onAutoCheckIn={handleAutoCheckIn} />
+      )}
+
       {!isDemo && (
         <button onClick={() => navigate(`/areas/${id}/edit`)} className="mt-6 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] self-center">{t("areaDetail.editArea")}</button>
       )}

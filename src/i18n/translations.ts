@@ -156,6 +156,28 @@ const translations = {
 
   // Nav
   "nav.gym": { en: "Gym", it: "Palestra" },
+
+  // Gym Card
+  "gym.title": { en: "Gym Card", it: "Scheda Palestra" },
+  "gym.todaySession": { en: "Today's session", it: "Sessione di oggi" },
+  "gym.empty": { en: "No exercises yet", it: "Nessun esercizio ancora" },
+  "gym.addExercise": { en: "Add exercise", it: "Aggiungi esercizio" },
+  "gym.editExercise": { en: "Edit exercise", it: "Modifica esercizio" },
+  "gym.history": { en: "Session history", it: "Storico sessioni" },
+  "gym.exercises": { en: "exercises", it: "esercizi" },
+  "gym.sets": { en: "sets", it: "serie" },
+  "gym.reps": { en: "reps", it: "rip" },
+  "gym.form.name": { en: "Name", it: "Nome" },
+  "gym.form.namePlaceholder": { en: "e.g. Bench press", it: "es. Panca piana" },
+  "gym.form.sets": { en: "Sets", it: "Serie" },
+  "gym.form.reps": { en: "Reps", it: "Rip" },
+  "gym.form.weight": { en: "Weight (kg)", it: "Peso (kg)" },
+  "gym.form.weightPlaceholder": { en: "Optional", it: "Opzionale" },
+  "gym.form.notes": { en: "Notes", it: "Note" },
+  "gym.form.notesPlaceholder": { en: "Optional", it: "Opzionale" },
+  "gym.form.save": { en: "Save", it: "Salva" },
+  "gym.form.delete": { en: "Delete", it: "Elimina" },
+  "gym.form.cancel": { en: "Cancel", it: "Annulla" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
