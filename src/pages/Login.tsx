@@ -360,6 +360,14 @@ const Login = () => {
         {genericError && (
           <p className="text-sm text-destructive text-center">{genericError}</p>
         )}
+
+        {/* Demo */}
+        <button
+          onClick={handleDemo}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
+        >
+          Try demo without an account
+        </button>
       </div>
     </div>
   );

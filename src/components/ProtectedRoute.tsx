@@ -1,10 +1,16 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useDemo } from "@/hooks/useDemo";
 import { Loader2 } from "lucide-react";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
+  const { isDemo } = useDemo();
   const location = useLocation();
+
+  if (isDemo) {
+    return <>{children}</>;
+  }
 
   if (loading) {
     return (
