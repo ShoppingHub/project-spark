@@ -46,6 +46,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/areas" element={<Areas />} />
               <Route path="/areas/new" element={<AreaForm mode="add" />} />
+              <Route path="/areas/:id" element={<AreaDetail />} />
               <Route path="/areas/:id/edit" element={<AreaForm mode="edit" />} />
               <Route path="/finance" element={<Finance />} />
               <Route path="/settings" element={<SettingsPage />} />
