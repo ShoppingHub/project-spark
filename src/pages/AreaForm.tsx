@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AreaTypePill } from "@/components/AreaTypePill";
@@ -23,11 +23,15 @@ interface AreaFormProps {
 
 export default function AreaForm({ mode }: AreaFormProps) {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const preselectedType = searchParams.get("type") as AreaType | null;
   const [name, setName] = useState("");
-  const [type, setType] = useState<AreaType | null>(null);
+  const [type, setType] = useState<AreaType | null>(
+    mode === "add" && preselectedType && typeOptions.includes(preselectedType) ? preselectedType : null
+  );
   const [frequency, setFrequency] = useState(7);
   const [typeError, setTypeError] = useState("");
   const [saving, setSaving] = useState(false);
