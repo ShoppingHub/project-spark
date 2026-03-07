@@ -12,6 +12,7 @@ import Finance from "./pages/Finance";
 import SettingsPage from "./pages/SettingsPage";
 import Login from "./pages/Login";
 import AuthCallback from "./pages/AuthCallback";
+import ResetPassword from "./pages/ResetPassword";
 import OnboardingLayout from "./pages/OnboardingLayout";
 import OnboardingAreas from "./pages/OnboardingAreas";
 import OnboardingFrequency from "./pages/OnboardingFrequency";
