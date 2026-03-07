@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/hooks/useI18n";
+import type { TranslationKey } from "@/i18n/translations";
 
 type AreaType = "health" | "study" | "reduce" | "finance";
 
@@ -9,11 +11,11 @@ const typeStyles: Record<AreaType, string> = {
   finance: "bg-[#1F4A50] text-[#EAEAEA] border-[#7DA3A0]/30",
 };
 
-const typeLabels: Record<AreaType, string> = {
-  health: "Health",
-  study: "Study",
-  reduce: "Reduce",
-  finance: "Finance",
+const typeLabelKeys: Record<AreaType, TranslationKey> = {
+  health: "areaType.health",
+  study: "areaType.study",
+  reduce: "areaType.reduce",
+  finance: "areaType.finance",
 };
 
 interface AreaTypePillProps {
@@ -22,6 +24,7 @@ interface AreaTypePillProps {
 }
 
 export function AreaTypePill({ type, className }: AreaTypePillProps) {
+  const { t } = useI18n();
   return (
     <span
       className={cn(
@@ -30,7 +33,7 @@ export function AreaTypePill({ type, className }: AreaTypePillProps) {
         className
       )}
     >
-      {typeLabels[type]}
+      {t(typeLabelKeys[type])}
     </span>
   );
 }
