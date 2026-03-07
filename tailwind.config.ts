@@ -57,6 +57,11 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        graph: {
+          positive: "hsl(var(--graph-positive))",
+          neutral: "hsl(var(--graph-neutral))",
+          decline: "hsl(var(--graph-decline))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
