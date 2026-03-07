@@ -207,6 +207,9 @@ const Index = () => {
               checkInLoading={!!checkInLoading[area.id]}
             />
           ))}
+          {checkInError && (
+            <p className="text-sm text-destructive text-center pb-2">{checkInError}</p>
+          )}
         </motion.div>
       )}
     </div>
