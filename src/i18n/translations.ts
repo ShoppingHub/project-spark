@@ -141,6 +141,11 @@ const translations = {
 
   // Areas page
   "areas.title": { en: "Areas", it: "Aree" },
+  "areas.section.health": { en: "Health", it: "Salute" },
+  "areas.section.study": { en: "Study", it: "Studio" },
+  "areas.section.reduce": { en: "Reduce", it: "Riduci" },
+  "areas.section.finance": { en: "Finance", it: "Finanze" },
+  "areas.add": { en: "+ Add", it: "+ Aggiungi" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
