@@ -34,6 +34,7 @@ const App = () => (
         <DemoProvider>
         <AuthProvider>
         <I18nProvider>
+        <MenuConfigProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
