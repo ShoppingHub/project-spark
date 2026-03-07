@@ -124,6 +124,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          language: string
           settings_notifications: boolean
           settings_score_visible: boolean
           updated_at: string
@@ -132,6 +133,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          language?: string
           settings_notifications?: boolean
           settings_score_visible?: boolean
           updated_at?: string
@@ -140,6 +142,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          language?: string
           settings_notifications?: boolean
           settings_score_visible?: boolean
           updated_at?: string
