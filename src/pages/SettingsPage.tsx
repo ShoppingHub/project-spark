@@ -130,6 +130,9 @@ const SettingsPage = () => {
         </div>
       </div>
 
+      {/* Menu */}
+      <MenuSection />
+
       {/* Demo banner */}
       {isDemo && (
         <div className="flex items-center justify-between rounded-xl bg-accent/20 ring-1 ring-accent px-4 py-3">
