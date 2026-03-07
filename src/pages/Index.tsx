@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useDemo } from "@/hooks/useDemo";
 import { useI18n } from "@/hooks/useI18n";
 import { Settings, TrendingUp } from "lucide-react";
 import { TimeRangeSelector, type TimeRange } from "@/components/TimeRangeSelector";
@@ -9,6 +10,7 @@ import { DashboardEmptyState } from "@/components/DashboardEmptyState";
 import { motion } from "framer-motion";
 import { subDays, format } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { getDemoAreas, getDemoScoresForRange } from "@/lib/demoData";
 import type { Database } from "@/integrations/supabase/types";
 import type { TranslationKey } from "@/i18n/translations";
 
@@ -46,6 +48,7 @@ function getLineColor(slope: number): string {
 
 const Index = () => {
   const { user } = useAuth();
+  const { isDemo } = useDemo();
   const { t } = useI18n();
   const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
@@ -55,6 +58,12 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
+    if (isDemo) {
+      setAreas(getDemoAreas());
+      setScores(getDemoScoresForRange(rangeToDays[timeRange]));
+      setLoading(false);
+      return;
+    }
     if (!user) return;
     const { data: areasData } = await supabase
       .from("areas").select("*").eq("user_id", user.id)
@@ -80,11 +89,10 @@ const Index = () => {
     }
     setScores(grouped);
     setLoading(false);
-  }, [user, timeRange]);
+  }, [user, isDemo, timeRange]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Compute aggregated moving average based on filter
   const { chartData, lineColor } = useMemo(() => {
     const filteredAreas = filter === "all"
       ? areas
@@ -92,7 +100,6 @@ const Index = () => {
 
     if (filteredAreas.length === 0) return { chartData: [], lineColor: "#8C9496" };
 
-    // Collect all scores for filtered areas, grouped by date
     const dateMap: Record<string, number[]> = {};
     for (const area of filteredAreas) {
       const areaScores = scores[area.id] || [];
@@ -102,7 +109,6 @@ const Index = () => {
       }
     }
 
-    // Build averaged data sorted by date
     const averaged = Object.entries(dateMap)
       .map(([date, values]) => ({
         date,
@@ -118,7 +124,6 @@ const Index = () => {
 
   return (
     <div className="flex flex-col min-h-full">
-      {/* Sticky header */}
       <div className="sticky top-0 z-40 bg-background">
         <div className="flex items-center justify-between px-4 h-14">
           <span className="text-[18px] font-semibold">BetonMe</span>
@@ -132,7 +137,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Content */}
       {loading ? (
         <div className="flex flex-col gap-4 px-4 pb-4">
           <div className="rounded-xl bg-card animate-pulse" style={{ height: "60vh" }} />
@@ -150,7 +154,6 @@ const Index = () => {
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="flex flex-col gap-4 px-4 pb-4"
         >
-          {/* Aggregated chart */}
           {hasData ? (
             <div className="rounded-xl bg-card p-4" style={{ height: "60vh" }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -172,27 +175,19 @@ const Index = () => {
               style={{ height: "60vh" }}>
               <TrendingUp size={48} className="text-muted-foreground" strokeWidth={1.5} />
               <p className="text-sm text-muted-foreground text-center px-8">
-                {filter === "all"
-                  ? t("areaDetail.emptyGraph")
-                  : t("dashboard.emptyFilter")}
+                {filter === "all" ? t("areaDetail.emptyGraph") : t("dashboard.emptyFilter")}
               </p>
             </div>
           )}
 
-          {/* Filter pills */}
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {filterOptions.map(({ value, labelKey }) => {
               const active = filter === value;
               return (
-                <button
-                  key={value}
-                  onClick={() => setFilter(value)}
+                <button key={value} onClick={() => setFilter(value)}
                   className={`flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors min-h-[36px] ${
-                    active
-                      ? "bg-[#7DA3A0] text-[#0F2F33]"
-                      : "border border-[#B9C0C1]/30 text-[#B9C0C1]"
-                  }`}
-                >
+                    active ? "bg-[#7DA3A0] text-[#0F2F33]" : "border border-[#B9C0C1]/30 text-[#B9C0C1]"
+                  }`}>
                   {t(labelKey)}
                 </button>
               );
