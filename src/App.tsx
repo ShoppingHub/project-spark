@@ -15,6 +15,7 @@ import AuthCallback from "./pages/AuthCallback";
 import OnboardingLayout from "./pages/OnboardingLayout";
 import OnboardingAreas from "./pages/OnboardingAreas";
 import OnboardingFrequency from "./pages/OnboardingFrequency";
+import AreaForm from "./pages/AreaForm";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,8 @@ const App = () => (
             >
               <Route path="/" element={<Index />} />
               <Route path="/areas" element={<Areas />} />
+              <Route path="/areas/new" element={<AreaForm mode="add" />} />
+              <Route path="/areas/:id/edit" element={<AreaForm mode="edit" />} />
               <Route path="/finance" element={<Finance />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
