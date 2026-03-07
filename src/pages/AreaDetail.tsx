@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useDemo } from "@/hooks/useDemo";
 import { useI18n } from "@/hooks/useI18n";
 import { ArrowLeft, TrendingUp } from "lucide-react";
 import { TimeRangeSelector, type TimeRange } from "@/components/TimeRangeSelector";
@@ -10,6 +11,7 @@ import { CalendarHeatmap } from "@/components/CalendarHeatmap";
 import { motion } from "framer-motion";
 import { subDays, format } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { getDemoAreas, getDemoScoresForRange, getDemoCheckinsLast30, getDemoTodayCheckins } from "@/lib/demoData";
 import type { Database } from "@/integrations/supabase/types";
 
 type Area = Database["public"]["Tables"]["areas"]["Row"];
@@ -36,6 +38,7 @@ function getLineColor(slope: number): string {
 export default function AreaDetail() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { isDemo } = useDemo();
   const { t } = useI18n();
   const navigate = useNavigate();
   const [area, setArea] = useState<Area | null>(null);
@@ -50,7 +53,23 @@ export default function AreaDetail() {
   const today = format(new Date(), "yyyy-MM-dd");
 
   const fetchData = useCallback(async () => {
-    if (!user || !id) return;
+    if (!id) return;
+
+    if (isDemo) {
+      const demoArea = getDemoAreas().find((a) => a.id === id);
+      if (!demoArea) { setLoading(false); return; }
+      setArea(demoArea);
+      const demoScores = getDemoScoresForRange(rangeToDays[timeRange]);
+      setScores(demoScores[id] || []);
+      setCheckinMap(getDemoCheckinsLast30(id));
+      const todayMap = getDemoTodayCheckins();
+      setTodayCheckedIn(!!todayMap[id]);
+      setScoreVisible(true);
+      setLoading(false);
+      return;
+    }
+
+    if (!user) return;
     const { data: areaData } = await supabase.from("areas").select("*").eq("id", id).single();
     if (!areaData) { setLoading(false); return; }
     setArea(areaData);
@@ -68,11 +87,12 @@ export default function AreaDetail() {
     setTodayCheckedIn(todayRes.data?.completed ?? false);
     setScoreVisible(userRes.data?.settings_score_visible ?? false);
     setLoading(false);
-  }, [user, id, timeRange, today]);
+  }, [user, isDemo, id, timeRange, today]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleCheckIn = async () => {
+    if (isDemo) return; // no-op in demo
     if (!user || !id) return;
     setCheckInLoading(true); setCheckInError("");
     try {
@@ -123,7 +143,9 @@ export default function AreaDetail() {
           <span className="text-[18px] font-semibold">{area.name}</span>
           <AreaTypePill type={area.type} />
         </div>
-        <button onClick={() => navigate(`/areas/${id}/edit`)} className="text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] flex items-center">{t("areaDetail.editArea")}</button>
+        {!isDemo && (
+          <button onClick={() => navigate(`/areas/${id}/edit`)} className="text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] flex items-center">{t("areaDetail.editArea")}</button>
+        )}
       </div>
       <div className="flex justify-center py-3"><TimeRangeSelector value={timeRange} onChange={setTimeRange} /></div>
 
@@ -154,14 +176,18 @@ export default function AreaDetail() {
         </div>
       )}
 
-      <div className="mt-4">
-        <button onClick={handleCheckIn} disabled={todayCheckedIn || checkInLoading}
-          className={`w-full min-h-[44px] rounded-lg text-base font-medium border transition-all flex items-center justify-center gap-2 ${todayCheckedIn ? "bg-[#7DA3A0]/20 text-[#7DA3A0] border-[#7DA3A0]" : "bg-transparent text-foreground border-[#7DA3A0]"} ${checkInLoading ? "opacity-50 cursor-not-allowed" : ""}`}>
-          {checkInLoading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> : todayCheckedIn ? t("card.observed") : t("card.logToday")}
-        </button>
-      </div>
+      {!isDemo && (
+        <div className="mt-4">
+          <button onClick={handleCheckIn} disabled={todayCheckedIn || checkInLoading}
+            className={`w-full min-h-[44px] rounded-lg text-base font-medium border transition-all flex items-center justify-center gap-2 ${todayCheckedIn ? "bg-[#7DA3A0]/20 text-[#7DA3A0] border-[#7DA3A0]" : "bg-transparent text-foreground border-[#7DA3A0]"} ${checkInLoading ? "opacity-50 cursor-not-allowed" : ""}`}>
+            {checkInLoading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> : todayCheckedIn ? t("card.observed") : t("card.logToday")}
+          </button>
+        </div>
+      )}
       {checkInError && <p className="mt-2 text-sm text-destructive text-center">{checkInError}</p>}
-      <button onClick={() => navigate(`/areas/${id}/edit`)} className="mt-6 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] self-center">{t("areaDetail.editArea")}</button>
+      {!isDemo && (
+        <button onClick={() => navigate(`/areas/${id}/edit`)} className="mt-6 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] self-center">{t("areaDetail.editArea")}</button>
+      )}
     </motion.div>
   );
 }
