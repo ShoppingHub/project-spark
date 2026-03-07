@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useDemo } from "@/hooks/useDemo";
 import { useI18n } from "@/hooks/useI18n";
+import { useMenuConfig } from "@/hooks/useMenuConfig";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
