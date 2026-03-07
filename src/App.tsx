@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
@@ -12,6 +12,9 @@ import Finance from "./pages/Finance";
 import SettingsPage from "./pages/SettingsPage";
 import Login from "./pages/Login";
 import AuthCallback from "./pages/AuthCallback";
+import OnboardingLayout from "./pages/OnboardingLayout";
+import OnboardingAreas from "./pages/OnboardingAreas";
+import OnboardingFrequency from "./pages/OnboardingFrequency";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +29,11 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route element={<OnboardingLayout />}>
+              <Route path="/onboarding" element={<Navigate to="/onboarding/areas" replace />} />
+              <Route path="/onboarding/areas" element={<OnboardingAreas />} />
+              <Route path="/onboarding/frequency" element={<OnboardingFrequency />} />
+            </Route>
             <Route
               element={
                 <ProtectedRoute>
