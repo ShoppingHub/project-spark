@@ -82,6 +82,8 @@ const translations = {
   "dashboard.empty.description": { en: "Add a life area to start seeing your trajectory.", it: "Aggiungi un'area per iniziare a vedere la tua traiettoria." },
   "dashboard.empty.button": { en: "Add your first area", it: "Aggiungi la tua prima area" },
   "dashboard.error": { en: "Something went wrong. Please try again.", it: "Qualcosa è andato storto. Riprova." },
+  "dashboard.filter.all": { en: "All", it: "Tutto" },
+  "dashboard.emptyFilter": { en: "No data for this category yet.", it: "Nessun dato per questa categoria." },
 
   // Trajectory card
   "card.observed": { en: "Observed", it: "Osservato" },
