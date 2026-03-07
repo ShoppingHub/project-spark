@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,13 +15,56 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { motion } from "framer-motion";
 
 const SettingsPage = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [scoreVisible, setScoreVisible] = useState(false);
+  const [notifications, setNotifications] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+
+  // Load settings
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("users")
+        .select("settings_score_visible, settings_notifications")
+        .eq("user_id", user.id)
+        .single();
+      if (data) {
+        setScoreVisible(data.settings_score_visible);
+        setNotifications(data.settings_notifications);
+      }
+    })();
+  }, [user]);
+
+  const updateSetting = useCallback(
+    async (field: "settings_score_visible" | "settings_notifications", value: boolean, rollback: () => void) => {
+      if (!user) return;
+      const { error } = await supabase
+        .from("users")
+        .update({ [field]: value })
+        .eq("user_id", user.id);
+      if (error) rollback();
+    },
+    [user]
+  );
+
+  const handleScoreToggle = (checked: boolean) => {
+    const prev = scoreVisible;
+    setScoreVisible(checked);
+    updateSetting("settings_score_visible", checked, () => setScoreVisible(prev));
+  };
+
+  const handleNotificationsToggle = (checked: boolean) => {
+    const prev = notifications;
+    setNotifications(checked);
+    updateSetting("settings_notifications", checked, () => setNotifications(prev));
+  };
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -35,7 +79,7 @@ const SettingsPage = () => {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
-      
+
       const res = await supabase.functions.invoke("delete-account", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -55,17 +99,40 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="flex flex-col px-4 pt-6 gap-8">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className="flex flex-col px-4 pt-6 pb-8 gap-8"
+    >
       <h1 className="text-[28px] font-semibold leading-[1.2]">Settings</h1>
 
+      {/* Toggles */}
       <div className="flex flex-col gap-4">
-        {/* Account section */}
-        <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">Signed in as</p>
-          <p className="text-base">{user?.email}</p>
+        <div className="flex items-center justify-between min-h-[44px]">
+          <span className="text-base">Show trajectory score</span>
+          <Switch
+            checked={scoreVisible}
+            onCheckedChange={handleScoreToggle}
+            className="data-[state=checked]:bg-[#7DA3A0]"
+          />
         </div>
+        <div className="flex items-center justify-between min-h-[44px]">
+          <span className="text-base">Notifications</span>
+          <Switch
+            checked={notifications}
+            onCheckedChange={handleNotificationsToggle}
+            className="data-[state=checked]:bg-[#7DA3A0]"
+          />
+        </div>
+      </div>
 
-        {/* Sign out */}
+      {/* Account section */}
+      <div className="flex flex-col gap-4">
+        <p className="text-sm text-muted-foreground font-medium">Account</p>
+
+        <p className="text-base text-muted-foreground truncate">{user?.email}</p>
+
         <button
           onClick={handleSignOut}
           disabled={signingOut}
@@ -75,7 +142,6 @@ const SettingsPage = () => {
           Sign out
         </button>
 
-        {/* Delete account */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <button className="text-sm text-destructive hover:opacity-80 transition-opacity min-h-[44px]">
@@ -109,7 +175,7 @@ const SettingsPage = () => {
           <p className="text-sm text-destructive">{deleteError}</p>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
