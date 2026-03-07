@@ -16,6 +16,7 @@ import OnboardingLayout from "./pages/OnboardingLayout";
 import OnboardingAreas from "./pages/OnboardingAreas";
 import OnboardingFrequency from "./pages/OnboardingFrequency";
 import AreaForm from "./pages/AreaForm";
+import AreaDetail from "./pages/AreaDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
