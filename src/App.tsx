@@ -32,6 +32,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route element={<OnboardingLayout />}>
               <Route path="/onboarding" element={<Navigate to="/onboarding/areas" replace />} />
               <Route path="/onboarding/areas" element={<OnboardingAreas />} />
