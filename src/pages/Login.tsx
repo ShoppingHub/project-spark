@@ -14,6 +14,8 @@ type Screen = "auth" | "check-email" | "forgot";
 
 const Login = () => {
   const { session, loading } = useAuth();
+  const { isDemo, enableDemo } = useDemo();
+  const navigate = useNavigate();
   const [screen, setScreen] = useState<Screen>("auth");
   const [tab, setTab] = useState<Tab>("login");
   const [email, setEmail] = useState("");
