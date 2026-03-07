@@ -11,6 +11,7 @@ import Areas from "./pages/Areas";
 import Finance from "./pages/Finance";
 import SettingsPage from "./pages/SettingsPage";
 import Login from "./pages/Login";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route
               element={
                 <ProtectedRoute>
