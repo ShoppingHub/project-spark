@@ -20,6 +20,7 @@ import { motion } from "framer-motion";
 
 const SettingsPage = () => {
   const { user, signOut } = useAuth();
+  const { isDemo, disableDemo } = useDemo();
   const navigate = useNavigate();
   const [scoreVisible, setScoreVisible] = useState(false);
   const [notifications, setNotifications] = useState(true);
