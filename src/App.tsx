@@ -12,6 +12,7 @@ import Finance from "./pages/Finance";
 import SettingsPage from "./pages/SettingsPage";
 import Login from "./pages/Login";
 import AuthCallback from "./pages/AuthCallback";
+import ResetPassword from "./pages/ResetPassword";
 import OnboardingLayout from "./pages/OnboardingLayout";
 import OnboardingAreas from "./pages/OnboardingAreas";
 import OnboardingFrequency from "./pages/OnboardingFrequency";
@@ -31,6 +32,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route element={<OnboardingLayout />}>
               <Route path="/onboarding" element={<Navigate to="/onboarding/areas" replace />} />
               <Route path="/onboarding/areas" element={<OnboardingAreas />} />
