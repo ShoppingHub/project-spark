@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useDemo } from "@/hooks/useDemo";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
@@ -19,6 +20,7 @@ import { motion } from "framer-motion";
 
 const SettingsPage = () => {
   const { user, signOut } = useAuth();
+  const { isDemo, disableDemo } = useDemo();
   const navigate = useNavigate();
   const [scoreVisible, setScoreVisible] = useState(false);
   const [notifications, setNotifications] = useState(true);
@@ -127,11 +129,27 @@ const SettingsPage = () => {
         </div>
       </div>
 
+      {/* Demo banner */}
+      {isDemo && (
+        <div className="flex items-center justify-between rounded-xl bg-accent/20 ring-1 ring-accent px-4 py-3">
+          <div>
+            <p className="text-sm font-medium">Demo mode</p>
+            <p className="text-xs text-muted-foreground">You're exploring without an account</p>
+          </div>
+          <button
+            onClick={() => { disableDemo(); navigate("/login", { replace: true }); }}
+            className="text-sm font-medium text-primary hover:opacity-80 transition-opacity"
+          >
+            Exit
+          </button>
+        </div>
+      )}
+
       {/* Account section */}
       <div className="flex flex-col gap-4">
         <p className="text-sm text-muted-foreground font-medium">Account</p>
 
-        <p className="text-base text-muted-foreground truncate">{user?.email}</p>
+        <p className="text-base text-muted-foreground truncate">{isDemo ? "demo@example.com" : user?.email}</p>
 
         <button
           onClick={handleSignOut}

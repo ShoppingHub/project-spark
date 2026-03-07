@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
+import { useDemo } from "@/hooks/useDemo";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 
@@ -13,6 +14,8 @@ type Screen = "auth" | "check-email" | "forgot";
 
 const Login = () => {
   const { session, loading } = useAuth();
+  const { isDemo, enableDemo } = useDemo();
+  const navigate = useNavigate();
   const [screen, setScreen] = useState<Screen>("auth");
   const [tab, setTab] = useState<Tab>("login");
   const [email, setEmail] = useState("");
@@ -34,9 +37,14 @@ const Login = () => {
     );
   }
 
-  if (session) {
+  if (session || isDemo) {
     return <Navigate to="/" replace />;
   }
+
+  const handleDemo = () => {
+    enableDemo();
+    navigate("/", { replace: true });
+  };
 
   const clearErrors = () => {
     setEmailError("");
@@ -352,6 +360,14 @@ const Login = () => {
         {genericError && (
           <p className="text-sm text-destructive text-center">{genericError}</p>
         )}
+
+        {/* Demo */}
+        <button
+          onClick={handleDemo}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
+        >
+          Try demo without an account
+        </button>
       </div>
     </div>
   );
