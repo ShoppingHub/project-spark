@@ -82,43 +82,184 @@ export type Database = {
           },
         ]
       }
-      gym_exercises: {
+      gym_muscle_groups: {
+        Row: {
+          created_at: string
+          day_id: string
+          id: string
+          name: string
+          order: number
+        }
+        Insert: {
+          created_at?: string
+          day_id: string
+          id?: string
+          name: string
+          order?: number
+        }
+        Update: {
+          created_at?: string
+          day_id?: string
+          id?: string
+          name?: string
+          order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gym_muscle_groups_day_id_fkey"
+            columns: ["day_id"]
+            isOneToOne: false
+            referencedRelation: "gym_program_days"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gym_program_days: {
         Row: {
           created_at: string
           id: string
           name: string
-          notes: string | null
           order: number
-          reps: number
-          session_id: string
-          sets: number
-          weight_kg: number | null
+          program_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
-          notes?: string | null
           order?: number
-          reps: number
-          session_id: string
-          sets: number
-          weight_kg?: number | null
+          program_id: string
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
-          notes?: string | null
           order?: number
-          reps?: number
-          session_id?: string
-          sets?: number
-          weight_kg?: number | null
+          program_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "gym_exercises_session_id_fkey"
+            foreignKeyName: "gym_program_days_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "gym_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gym_program_exercises: {
+        Row: {
+          active: boolean
+          created_at: string
+          default_weight: number | null
+          group_id: string
+          id: string
+          is_daily: boolean
+          name: string
+          order: number
+          reps: number
+          sets: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          default_weight?: number | null
+          group_id: string
+          id?: string
+          is_daily?: boolean
+          name: string
+          order?: number
+          reps: number
+          sets: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          default_weight?: number | null
+          group_id?: string
+          id?: string
+          is_daily?: boolean
+          name?: string
+          order?: number
+          reps?: number
+          sets?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gym_program_exercises_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "gym_muscle_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gym_programs: {
+        Row: {
+          area_id: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          area_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          area_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gym_programs_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: true
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gym_session_exercises: {
+        Row: {
+          completed: boolean
+          created_at: string
+          exercise_id: string
+          id: string
+          session_id: string
+          weight_used: number | null
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          exercise_id: string
+          id?: string
+          session_id: string
+          weight_used?: number | null
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          exercise_id?: string
+          id?: string
+          session_id?: string
+          weight_used?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gym_session_exercises_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "gym_program_exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gym_session_exercises_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "gym_sessions"
@@ -131,6 +272,7 @@ export type Database = {
           area_id: string
           created_at: string
           date: string
+          day_id: string
           id: string
           user_id: string
         }
@@ -138,6 +280,7 @@ export type Database = {
           area_id: string
           created_at?: string
           date: string
+          day_id: string
           id?: string
           user_id: string
         }
@@ -145,6 +288,7 @@ export type Database = {
           area_id?: string
           created_at?: string
           date?: string
+          day_id?: string
           id?: string
           user_id?: string
         }
@@ -154,6 +298,13 @@ export type Database = {
             columns: ["area_id"]
             isOneToOne: false
             referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gym_sessions_day_id_fkey"
+            columns: ["day_id"]
+            isOneToOne: false
+            referencedRelation: "gym_program_days"
             referencedColumns: ["id"]
           },
         ]
