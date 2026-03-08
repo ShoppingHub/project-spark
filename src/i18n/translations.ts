@@ -178,6 +178,27 @@ const translations = {
   "gym.form.save": { en: "Save", it: "Salva" },
   "gym.form.delete": { en: "Delete", it: "Elimina" },
   "gym.form.cancel": { en: "Cancel", it: "Annulla" },
+
+  // Gym Wizard
+  "gym.wizard.title": { en: "Set up your workout plan", it: "Configura la tua scheda" },
+  "gym.wizard.subtitle": { en: "Create the structure of your weekly workouts.", it: "Crea la struttura dei tuoi allenamenti settimanali." },
+  "gym.wizard.cta": { en: "Get started", it: "Inizia" },
+  "gym.wizard.howManyDays": { en: "How many training days?", it: "Quanti giorni di allenamento?" },
+  "gym.wizard.createPlan": { en: "Create plan", it: "Crea scheda" },
+
+  // Gym Plan Editor
+  "gym.plan.title": { en: "Plan", it: "Scheda" },
+  "gym.plan.edit": { en: "Edit plan", it: "Modifica scheda" },
+  "gym.plan.addGroup": { en: "Add muscle group", it: "Aggiungi gruppo muscolare" },
+  "gym.plan.groupPlaceholder": { en: "e.g. Legs", it: "es. Gambe" },
+  "gym.plan.deactivate": { en: "Deactivate exercise", it: "Disattiva esercizio" },
+  "gym.daily": { en: "Daily", it: "Giornalieri" },
+  "gym.dailySub": { en: "Appears in every session", it: "Appare in ogni sessione" },
+
+  // Gym Session
+  "gym.session.noExercises": { en: "No active exercises for this day", it: "Nessun esercizio attivo per questo giorno" },
+  "gym.session.noExercisesSub": { en: "Add exercises from Edit plan", it: "Aggiungi esercizi dalla modifica scheda" },
+  "gym.session.selectDay": { en: "Select day", it: "Seleziona giorno" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
