@@ -58,6 +58,7 @@ const App = () => (
               <Route path="/activities/:id" element={<AreaDetail />} />
               <Route path="/activities/:id/edit" element={<AreaForm mode="edit" />} />
               {/* Legacy redirects */}
+              <Route path="/progress" element={<Progress />} />
               <Route path="/areas" element={<Navigate to="/activities" replace />} />
               <Route path="/areas/*" element={<Navigate to="/activities" replace />} />
               <Route path="/finance" element={<Finance />} />
