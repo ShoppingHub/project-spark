@@ -71,7 +71,7 @@ const Areas = () => {
       <div className="flex items-center justify-between h-14">
         <h1 className="text-[18px] font-semibold">{t("areas.title")}</h1>
         {!isDemo && (
-          <button onClick={() => navigate("/areas/new")}
+          <button onClick={() => navigate("/activities/new")}
             className="flex items-center justify-center h-10 w-10 min-h-[44px] min-w-[44px]">
             <Plus size={24} strokeWidth={1.5} className="text-[#7DA3A0]" />
           </button>
