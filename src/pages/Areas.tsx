@@ -87,7 +87,7 @@ const Areas = () => {
                 <span className="text-sm font-medium text-[#B9C0C1]">{t(labelKey)}</span>
               </div>
               {items.map((area) => (
-                <button key={area.id} onClick={() => navigate(`/areas/${area.id}`)}
+                <button key={area.id} onClick={() => navigate(`/activities/${area.id}`)}
                   className="w-full flex items-center justify-between rounded-lg bg-[#1F4A50] px-4 min-h-[48px] hover:opacity-90 transition-opacity">
                   <span className="text-base text-foreground truncate mr-3">{area.name}</span>
                   <ChevronRight size={18} strokeWidth={1.5} className="text-[#B9C0C1] flex-shrink-0" />
