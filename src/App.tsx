@@ -10,7 +10,7 @@ import { NavConfigProvider } from "@/hooks/useNavConfig";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
 import Index from "./pages/Index";
-import Areas from "./pages/Areas";
+import Areas from "./pages/Activities";
 import Finance from "./pages/Finance";
 import SettingsPage from "./pages/SettingsPage";
 import Progress from "./pages/Progress";

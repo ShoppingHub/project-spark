@@ -161,7 +161,7 @@ export default function AreaDetail() {
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeInOut" }} className="flex flex-col px-4 pt-2 pb-8">
       <div className="flex items-center justify-between h-14">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate("/")} className="flex items-center justify-center h-10 w-10 min-h-[44px] min-w-[44px]"><ArrowLeft size={24} strokeWidth={1.5} /></button>
+          <button onClick={() => navigate("/activities")} className="flex items-center justify-center h-10 w-10 min-h-[44px] min-w-[44px]"><ArrowLeft size={24} strokeWidth={1.5} /></button>
           <span className="text-[18px] font-semibold">{area.name}</span>
           <AreaTypePill type={area.type} />
         </div>
