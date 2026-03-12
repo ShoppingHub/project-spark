@@ -7,7 +7,9 @@ const translations = {
   // Bottom nav
   "nav.home": { en: "Home", it: "Home" },
   "nav.areas": { en: "Areas", it: "Aree" },
-  "nav.finance": { en: "Finance", it: "Finanza" },
+  "nav.activities": { en: "Activities", it: "Attività" },
+  "nav.progress": { en: "Progress", it: "Progress" },
+  "nav.finance": { en: "Finance", it: "Finanze" },
   "nav.settings": { en: "Settings", it: "Impostazioni" },
 
   // Login
