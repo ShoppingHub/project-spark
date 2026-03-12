@@ -68,7 +68,7 @@ export default function AreaForm({ mode }: AreaFormProps) {
       } else if (id) {
         const { error: updateError } = await supabase.from("areas").update({ name: trimmedName, type, frequency_per_week: frequency }).eq("id", id);
         if (updateError) throw updateError;
-        navigate(`/areas/${id}`, { replace: true });
+        navigate(`/activities/${id}`, { replace: true });
       }
     } catch { setError(t("areaForm.error")); setSaving(false); }
   };
