@@ -13,6 +13,7 @@ import Index from "./pages/Index";
 import Areas from "./pages/Areas";
 import Finance from "./pages/Finance";
 import SettingsPage from "./pages/SettingsPage";
+import Progress from "./pages/Progress";
 import Login from "./pages/Login";
 import AuthCallback from "./pages/AuthCallback";
 import ResetPassword from "./pages/ResetPassword";
