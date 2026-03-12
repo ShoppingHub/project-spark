@@ -55,7 +55,7 @@ export function TrajectoryCard({
 
   return (
     <div className="rounded-xl bg-card p-4 flex flex-col" style={{ height: "55vh" }}>
-      <div className="flex items-center justify-between mb-3 cursor-pointer" onClick={() => navigate(`/areas/${areaId}`)}>
+      <div className="flex items-center justify-between mb-3 cursor-pointer" onClick={() => navigate(`/activities/${areaId}`)}>
         <span className="text-[18px] font-medium">{name}</span>
         <AreaTypePill type={type} />
       </div>
