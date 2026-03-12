@@ -350,6 +350,7 @@ export type Database = {
       users: {
         Row: {
           created_at: string
+          extra_tab_enabled: boolean
           id: string
           language: string
           menu_custom_items: string[]
@@ -360,6 +361,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          extra_tab_enabled?: boolean
           id?: string
           language?: string
           menu_custom_items?: string[]
@@ -370,6 +372,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          extra_tab_enabled?: boolean
           id?: string
           language?: string
           menu_custom_items?: string[]
