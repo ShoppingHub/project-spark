@@ -94,7 +94,7 @@ const Areas = () => {
                 </button>
               ))}
               {!isDemo && (
-                <button onClick={() => navigate(`/areas/new?type=${type}`)}
+                <button onClick={() => navigate(`/activities/new?type=${type}`)}
                   className="text-sm font-medium text-[#7DA3A0] hover:opacity-80 transition-opacity min-h-[36px] flex items-center">
                   {t("areas.add")}
                 </button>

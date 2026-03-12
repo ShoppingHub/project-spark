@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useDemo } from "@/hooks/useDemo";
 import { useI18n } from "@/hooks/useI18n";
-import { useMenuConfig } from "@/hooks/useMenuConfig";
+import { useNavConfig } from "@/hooks/useNavConfig";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Lock } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -18,6 +18,7 @@ const SettingsPage = () => {
   const { user, signOut } = useAuth();
   const { isDemo, disableDemo } = useDemo();
   const { t, locale, setLocale } = useI18n();
+  const { extraTabEnabled, setExtraTabEnabled } = useNavConfig();
   const navigate = useNavigate();
   const [scoreVisible, setScoreVisible] = useState(false);
   const [notifications, setNotifications] = useState(true);
@@ -128,10 +129,16 @@ const SettingsPage = () => {
           <span className="text-base">{t("settings.notifications")}</span>
           <Switch checked={notifications} onCheckedChange={handleNotificationsToggle} className="data-[state=checked]:bg-[#7DA3A0]" />
         </div>
-      </div>
 
-      {/* Menu */}
-      <MenuSection />
+        {/* Finance tab toggle */}
+        <div className="flex items-center justify-between min-h-[44px]">
+          <div className="flex flex-col">
+            <span className="text-base">{t("settings.financeTab")}</span>
+            <span className="text-xs text-muted-foreground">{t("settings.financeTabSub")}</span>
+          </div>
+          <Switch checked={extraTabEnabled} onCheckedChange={setExtraTabEnabled} className="data-[state=checked]:bg-[#7DA3A0]" />
+        </div>
+      </div>
 
       {/* Demo banner */}
       {isDemo && (
@@ -189,64 +196,5 @@ const SettingsPage = () => {
     </motion.div>
   );
 };
-
-function MenuSection() {
-  const { t } = useI18n();
-  const { customItems, toggleItem, isItemActive, canActivateMore, hasGymArea } = useMenuConfig();
-
-  const fixedItems = [
-    { label: "Home" },
-    { label: t("nav.areas") },
-    { label: t("nav.settings") },
-  ];
-
-  type ToggleItem = { key: "finance" | "gym"; labelKey: "settings.menu.finance" | "settings.menu.gym"; visible: boolean };
-  const toggleItems: ToggleItem[] = [
-    { key: "finance", labelKey: "settings.menu.finance", visible: true },
-    { key: "gym", labelKey: "settings.menu.gym", visible: hasGymArea },
-  ];
-
-  return (
-    <div className="flex flex-col gap-4">
-      <p className="text-sm text-muted-foreground font-medium">{t("settings.menu")}</p>
-
-      {/* Fixed items */}
-      {fixedItems.map((item) => (
-        <div key={item.label} className="flex items-center justify-between min-h-[44px]">
-          <span className="text-base">{item.label}</span>
-          <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full flex items-center gap-1">
-            <Lock size={10} />
-            {t("settings.menu.fixed")}
-          </span>
-        </div>
-      ))}
-
-      {/* Toggleable items */}
-      {toggleItems
-        .filter((item) => item.visible)
-        .map((item) => {
-          const active = isItemActive(item.key);
-          const disabled = !active && !canActivateMore;
-          return (
-            <div key={item.key} className="flex items-center justify-between min-h-[44px]">
-              <span className={`text-base ${disabled ? "text-muted-foreground/50" : ""}`}>
-                {t(item.labelKey)}
-              </span>
-              <Switch
-                checked={active}
-                disabled={disabled}
-                onCheckedChange={() => toggleItem(item.key)}
-                className="data-[state=checked]:bg-[#7DA3A0]"
-              />
-            </div>
-          );
-        })}
-
-      {!canActivateMore && (
-        <p className="text-xs text-muted-foreground">{t("settings.menu.maxReached")}</p>
-      )}
-    </div>
-  );
-}
 
 export default SettingsPage;

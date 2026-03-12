@@ -16,7 +16,7 @@ export function DashboardEmptyState() {
         </p>
       </div>
       <button
-        onClick={() => navigate("/areas/new")}
+        onClick={() => navigate("/activities/new")}
         className="h-12 px-6 rounded-xl bg-primary text-primary-foreground font-medium text-base hover:opacity-90 transition-opacity min-h-[44px]"
       >
         {t("dashboard.empty.button")}

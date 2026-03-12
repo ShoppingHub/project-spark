@@ -59,7 +59,7 @@ export function TrajectoryCard({
         <span className="text-[18px] font-medium">{name}</span>
         <AreaTypePill type={type} />
       </div>
-      <div className="flex-1 min-h-0 cursor-pointer" onClick={() => navigate(`/areas/${areaId}`)}>
+      <div className="flex-1 min-h-0 cursor-pointer" onClick={() => navigate(`/activities/${areaId}`)}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
             <CartesianGrid strokeDasharray="0" horizontal vertical={false} stroke="#EAEAEA" strokeOpacity={0.1} />

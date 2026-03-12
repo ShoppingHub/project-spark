@@ -214,7 +214,7 @@ export default function AreaDetail() {
       )}
 
       {!isDemo && (
-        <button onClick={() => navigate(`/areas/${id}/edit`)} className="mt-6 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] self-center">{t("areaDetail.editArea")}</button>
+        <button onClick={() => navigate(`/activities/${id}/edit`)} className="mt-6 text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] self-center">{t("areaDetail.editArea")}</button>
       )}
     </motion.div>
   );

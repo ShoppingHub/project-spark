@@ -105,7 +105,7 @@ const Finance = () => {
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeInOut" }} className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-16">
         <BarChart2 size={48} className="text-[#8C9496]" strokeWidth={1.5} />
         <p className="text-sm text-muted-foreground text-center">{t("finance.empty")}</p>
-        <button onClick={() => navigate("/areas/new?type=finance")} className="h-12 px-6 rounded-xl bg-primary text-primary-foreground font-medium text-base hover:opacity-90 transition-opacity min-h-[44px]">{t("finance.addArea")}</button>
+        <button onClick={() => navigate("/activities/new?type=finance")} className="h-12 px-6 rounded-xl bg-primary text-primary-foreground font-medium text-base hover:opacity-90 transition-opacity min-h-[44px]">{t("finance.addArea")}</button>
       </motion.div>
     );
   }
