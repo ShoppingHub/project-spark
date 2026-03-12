@@ -142,7 +142,7 @@ const Index = () => {
     <div className="flex flex-col min-h-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-14">
-        <span className="text-[18px] font-semibold">BetonMe</span>
+        <span className="text-[18px] font-semibold"><span className="text-foreground">opad</span><span style={{ color: '#B5453A' }}>.me</span></span>
         <span className="text-sm text-muted-foreground capitalize">{todayFormatted}</span>
       </div>
 

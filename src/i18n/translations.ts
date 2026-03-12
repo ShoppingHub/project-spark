@@ -13,7 +13,7 @@ const translations = {
   "nav.settings": { en: "Settings", it: "Impostazioni" },
 
   // Login
-  "login.title": { en: "BetonMe", it: "BetonMe" },
+  "login.title": { en: "opad.me", it: "opad.me" },
   "login.tab.login": { en: "Log in", it: "Accedi" },
   "login.tab.signup": { en: "Sign up", it: "Registrati" },
   "login.email.placeholder": { en: "your@email.com", it: "tua@email.com" },
