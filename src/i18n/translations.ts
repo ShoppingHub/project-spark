@@ -149,15 +149,9 @@ const translations = {
   "areas.section.finance": { en: "Finance", it: "Finanze" },
   "areas.add": { en: "+ Add", it: "+ Aggiungi" },
 
-  // Menu settings
-  "settings.menu": { en: "Menu", it: "Menu" },
-  "settings.menu.fixed": { en: "fixed", it: "fisso" },
-  "settings.menu.finance": { en: "Finance", it: "Finanze" },
-  "settings.menu.gym": { en: "Gym", it: "Palestra" },
-  "settings.menu.maxReached": { en: "Max 2 custom items active", it: "Max 2 voci personalizzate attive" },
-
-  // Nav
-  "nav.gym": { en: "Gym", it: "Palestra" },
+  // Finance toggle
+  "settings.financeTab": { en: "Show Finance tab", it: "Mostra sezione Finanze" },
+  "settings.financeTabSub": { en: "Adds quick access to the finance projection.", it: "Aggiunge un accesso rapido alla proiezione finanziaria." },
 
   // Gym Card
   "gym.title": { en: "Gym Card", it: "Scheda Palestra" },
