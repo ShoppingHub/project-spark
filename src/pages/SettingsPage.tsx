@@ -147,7 +147,7 @@ const SettingsPage = () => {
             <p className="text-sm font-medium">{t("settings.demo.title")}</p>
             <p className="text-xs text-muted-foreground">{t("settings.demo.description")}</p>
           </div>
-          <button onClick={() => { disableDemo(); navigate("/login", { replace: true }); }}
+          <button onClick={() => { sessionStorage.removeItem("demo_mode"); window.location.href = "/login"; }}
             className="text-sm font-medium text-primary hover:opacity-80 transition-opacity">
             {t("settings.demo.exit")}
           </button>
