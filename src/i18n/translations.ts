@@ -7,7 +7,9 @@ const translations = {
   // Bottom nav
   "nav.home": { en: "Home", it: "Home" },
   "nav.areas": { en: "Areas", it: "Aree" },
-  "nav.finance": { en: "Finance", it: "Finanza" },
+  "nav.activities": { en: "Activities", it: "Attività" },
+  "nav.progress": { en: "Progress", it: "Progress" },
+  "nav.finance": { en: "Finance", it: "Finanze" },
   "nav.settings": { en: "Settings", it: "Impostazioni" },
 
   // Login
@@ -140,22 +142,16 @@ const translations = {
   "notFound.link": { en: "Return to Home", it: "Torna alla Home" },
 
   // Areas page
-  "areas.title": { en: "Areas", it: "Aree" },
+  "areas.title": { en: "Activities", it: "Attività" },
   "areas.section.health": { en: "Health", it: "Salute" },
   "areas.section.study": { en: "Study", it: "Studio" },
   "areas.section.reduce": { en: "Reduce", it: "Riduci" },
   "areas.section.finance": { en: "Finance", it: "Finanze" },
   "areas.add": { en: "+ Add", it: "+ Aggiungi" },
 
-  // Menu settings
-  "settings.menu": { en: "Menu", it: "Menu" },
-  "settings.menu.fixed": { en: "fixed", it: "fisso" },
-  "settings.menu.finance": { en: "Finance", it: "Finanze" },
-  "settings.menu.gym": { en: "Gym", it: "Palestra" },
-  "settings.menu.maxReached": { en: "Max 2 custom items active", it: "Max 2 voci personalizzate attive" },
-
-  // Nav
-  "nav.gym": { en: "Gym", it: "Palestra" },
+  // Finance toggle
+  "settings.financeTab": { en: "Show Finance tab", it: "Mostra sezione Finanze" },
+  "settings.financeTabSub": { en: "Adds quick access to the finance projection.", it: "Aggiunge un accesso rapido alla proiezione finanziaria." },
 
   // Gym Card
   "gym.title": { en: "Gym Card", it: "Scheda Palestra" },

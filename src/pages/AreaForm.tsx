@@ -68,7 +68,7 @@ export default function AreaForm({ mode }: AreaFormProps) {
       } else if (id) {
         const { error: updateError } = await supabase.from("areas").update({ name: trimmedName, type, frequency_per_week: frequency }).eq("id", id);
         if (updateError) throw updateError;
-        navigate(`/areas/${id}`, { replace: true });
+        navigate(`/activities/${id}`, { replace: true });
       }
     } catch { setError(t("areaForm.error")); setSaving(false); }
   };
@@ -92,7 +92,7 @@ export default function AreaForm({ mode }: AreaFormProps) {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeInOut" }} className="flex flex-col min-h-full px-4 pt-2 pb-8">
       <div className="flex items-center gap-3 h-14">
-        <button onClick={() => navigate(mode === "edit" ? `/areas/${id}` : "/")} className="flex items-center justify-center h-10 w-10 min-h-[44px] min-w-[44px]"><ArrowLeft size={24} strokeWidth={1.5} /></button>
+        <button onClick={() => navigate(mode === "edit" ? `/activities/${id}` : "/")} className="flex items-center justify-center h-10 w-10 min-h-[44px] min-w-[44px]"><ArrowLeft size={24} strokeWidth={1.5} /></button>
         <h1 className="text-[18px] font-semibold">{mode === "add" ? t("areaForm.add.title") : t("areaForm.edit.title")}</h1>
       </div>
       <div className="flex flex-col gap-8 mt-4 flex-1">

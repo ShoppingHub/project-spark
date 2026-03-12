@@ -71,7 +71,7 @@ const Areas = () => {
       <div className="flex items-center justify-between h-14">
         <h1 className="text-[18px] font-semibold">{t("areas.title")}</h1>
         {!isDemo && (
-          <button onClick={() => navigate("/areas/new")}
+          <button onClick={() => navigate("/activities/new")}
             className="flex items-center justify-center h-10 w-10 min-h-[44px] min-w-[44px]">
             <Plus size={24} strokeWidth={1.5} className="text-[#7DA3A0]" />
           </button>
@@ -87,14 +87,14 @@ const Areas = () => {
                 <span className="text-sm font-medium text-[#B9C0C1]">{t(labelKey)}</span>
               </div>
               {items.map((area) => (
-                <button key={area.id} onClick={() => navigate(`/areas/${area.id}`)}
+                <button key={area.id} onClick={() => navigate(`/activities/${area.id}`)}
                   className="w-full flex items-center justify-between rounded-lg bg-[#1F4A50] px-4 min-h-[48px] hover:opacity-90 transition-opacity">
                   <span className="text-base text-foreground truncate mr-3">{area.name}</span>
                   <ChevronRight size={18} strokeWidth={1.5} className="text-[#B9C0C1] flex-shrink-0" />
                 </button>
               ))}
               {!isDemo && (
-                <button onClick={() => navigate(`/areas/new?type=${type}`)}
+                <button onClick={() => navigate(`/activities/new?type=${type}`)}
                   className="text-sm font-medium text-[#7DA3A0] hover:opacity-80 transition-opacity min-h-[36px] flex items-center">
                   {t("areas.add")}
                 </button>
