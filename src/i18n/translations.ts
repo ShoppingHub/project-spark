@@ -83,6 +83,12 @@ const translations = {
   "dashboard.empty.title": { en: "What do you want to observe?", it: "Cosa vuoi osservare?" },
   "dashboard.empty.description": { en: "Add a life area to start seeing your trajectory.", it: "Aggiungi un'area per iniziare a vedere la tua traiettoria." },
   "dashboard.empty.button": { en: "Add your first area", it: "Aggiungi la tua prima area" },
+
+  // Home hub
+  "home.empty.title": { en: "What do you want to observe?", it: "Cosa vuoi osservare?" },
+  "home.empty.description": { en: "Add an area in Activities to start observing.", it: "Aggiungi un'area in Attività per iniziare." },
+  "home.empty.button": { en: "Go to Activities", it: "Vai ad Attività" },
+  "home.allLogged": { en: "All logged for today.", it: "Tutto registrato per oggi." },
   "dashboard.error": { en: "Something went wrong. Please try again.", it: "Qualcosa è andato storto. Riprova." },
   "dashboard.filter.all": { en: "All", it: "Tutto" },
   "dashboard.emptyFilter": { en: "No data for this category yet.", it: "Nessun dato per questa categoria." },
