@@ -153,7 +153,11 @@ const translations = {
   "settings.financeTab": { en: "Show Finance tab", it: "Mostra sezione Finanze" },
   "settings.financeTabSub": { en: "Adds quick access to the finance projection.", it: "Aggiunge un accesso rapido alla proiezione finanziaria." },
 
-  // Gym Card
+  // Progress
+  "progress.empty.title": { en: "No data yet.", it: "Nessun dato ancora." },
+  "progress.empty.description": { en: "Add an area in Activities and start logging.", it: "Aggiungi un'area in Attività e inizia a registrare." },
+  "progress.empty.button": { en: "Go to Activities", it: "Vai ad Attività" },
+
   "gym.title": { en: "Gym Card", it: "Scheda Palestra" },
   "gym.todaySession": { en: "Today's session", it: "Sessione di oggi" },
   "gym.empty": { en: "No exercises yet", it: "Nessun esercizio ancora" },
