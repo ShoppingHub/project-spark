@@ -166,7 +166,7 @@ export default function AreaDetail() {
           <AreaTypePill type={area.type} />
         </div>
         {!isDemo && (
-          <button onClick={() => navigate(`/areas/${id}/edit`)} className="text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] flex items-center">{t("areaDetail.editArea")}</button>
+          <button onClick={() => navigate(`/activities/${id}/edit`)} className="text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] flex items-center">{t("areaDetail.editArea")}</button>
         )}
       </div>
       <div className="flex justify-center py-3"><TimeRangeSelector value={timeRange} onChange={setTimeRange} /></div>
