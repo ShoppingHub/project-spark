@@ -142,7 +142,7 @@ const translations = {
   "notFound.link": { en: "Return to Home", it: "Torna alla Home" },
 
   // Areas page
-  "areas.title": { en: "Areas", it: "Aree" },
+  "areas.title": { en: "Activities", it: "Attività" },
   "areas.section.health": { en: "Health", it: "Salute" },
   "areas.section.study": { en: "Study", it: "Studio" },
   "areas.section.reduce": { en: "Reduce", it: "Riduci" },
