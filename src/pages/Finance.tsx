@@ -130,7 +130,7 @@ const Finance = () => {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeInOut" }} className="flex flex-col px-4 pt-2 pb-8">
       <div className="h-14 flex items-center"><h1 className="text-[18px] font-semibold">{t("finance.title")}</h1></div>
-      <div className="flex justify-center pb-3"><TimeRangeSelector value={timeRange} onChange={setTimeRange} /></div>
+      <div className="flex justify-center pb-3"><TimeRangeSelector value={timeRange} onChange={setTimeRange} ranges={financeRanges} /></div>
       <div className="rounded-xl bg-card p-4" style={{ height: "55vh" }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
