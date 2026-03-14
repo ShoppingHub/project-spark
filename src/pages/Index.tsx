@@ -319,6 +319,7 @@ const Index = () => {
                 gymDayName={gymDayInfo?.areaId === area.id ? gymDayInfo.dayName : undefined}
                 note={notes[area.id] || ""}
                 onSaveNote={handleSaveNote}
+              />
             );
           })}
 
