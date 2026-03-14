@@ -8,7 +8,9 @@ import { ArrowLeft } from "lucide-react";
 import { AreaTypePill } from "@/components/AreaTypePill";
 import { ScheduledDaysSection } from "@/components/area-detail/ScheduledDaysSection";
 import { NotesHistorySection } from "@/components/area-detail/NotesHistorySection";
+import { GymCard } from "@/components/GymCard";
 import { motion } from "framer-motion";
+import { format } from "date-fns";
 import { getDemoAreas } from "@/lib/demoData";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -22,6 +24,7 @@ export default function AreaDetail() {
   const navigate = useNavigate();
   const [area, setArea] = useState<Area | null>(null);
   const [loading, setLoading] = useState(true);
+  const today = format(new Date(), "yyyy-MM-dd");
 
   const fetchData = useCallback(async () => {
     if (!id) return;
@@ -62,6 +65,23 @@ export default function AreaDetail() {
     );
   }
 
+  const isGymArea = area.type === "health" && /^(gym|palestra)$/i.test(area.name);
+
+  const handleAutoCheckIn = async () => {
+    if (!user || !id) return;
+    try {
+      await supabase.from("checkins").upsert(
+        { area_id: id, user_id: user.id, date: today, completed: true },
+        { onConflict: "area_id,date" }
+      );
+      const { data: sessionData } = await supabase.auth.getSession();
+      await supabase.functions.invoke("calculate-score", {
+        body: { area_id: id, date: today },
+        headers: { Authorization: `Bearer ${sessionData.session?.access_token}` },
+      });
+    } catch { /* silent */ }
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeInOut" }} className="flex flex-col px-4 pt-2 pb-8">
       {/* Header */}
@@ -84,6 +104,13 @@ export default function AreaDetail() {
       <div className="mt-6">
         <ScheduledDaysSection areaId={id!} frequencyPerWeek={area.frequency_per_week} isDemo={isDemo} />
       </div>
+
+      {/* Gym Card */}
+      {!isDemo && isGymArea && id && (
+        <div className="mt-6">
+          <GymCard areaId={id} onAutoCheckIn={handleAutoCheckIn} />
+        </div>
+      )}
 
       {/* Notes History */}
       <div className="mt-6">
