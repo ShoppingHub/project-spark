@@ -55,7 +55,7 @@ const Finance = () => {
   const { user } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
-  const [timeRange, setTimeRange] = useState<TimeRange>("30d");
+  const [timeRange, setTimeRange] = useState<TimeRange>("1m");
   const [financeArea, setFinanceArea] = useState<Area | null | undefined>(undefined);
   const [scores, setScores] = useState<{ date: string; score: number }[]>([]);
   const [hasCheckins, setHasCheckins] = useState(false);
