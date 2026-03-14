@@ -213,6 +213,20 @@ const translations = {
   "gym.session.noExercises": { en: "No active exercises for this day", it: "Nessun esercizio attivo per questo giorno" },
   "gym.session.noExercisesSub": { en: "Add exercises from Edit plan", it: "Aggiungi esercizi dalla modifica scheda" },
   "gym.session.selectDay": { en: "Select day", it: "Seleziona giorno" },
+
+  // Reduce tracking
+  "reduce.trackingLabel": { en: "How do you want to track this?", it: "Come vuoi tracciare?" },
+  "reduce.modeBinary": { en: "Simple (done / not done)", it: "Semplice (fatto / non fatto)" },
+  "reduce.modeQuantity": { en: "Count occurrences", it: "Conta occorrenze" },
+  "reduce.unitLabelLabel": { en: "What are you counting?", it: "Cosa stai contando?" },
+  "reduce.unitLabelPlaceholder": { en: "e.g. cigarettes", it: "es. sigarette" },
+  "reduce.baselineLabel": { en: "Typical daily amount (your starting reference)", it: "Quantità giornaliera tipica (riferimento iniziale)" },
+  "reduce.baselinePlaceholder": { en: "e.g. 10", it: "es. 10" },
+  "reduce.unitLabelError": { en: "Please add a unit label", it: "Aggiungi un'etichetta" },
+  "reduce.baselineError": { en: "Please enter a starting quantity", it: "Inserisci una quantità iniziale" },
+  "reduce.showQuickAdd": { en: "Show quick-add on Home", it: "Mostra contatore rapido in Home" },
+  "reduce.recorded": { en: "recorded", it: "registrato" },
+  "reduce.today": { en: "today", it: "oggi" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

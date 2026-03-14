@@ -310,6 +310,21 @@ const Index = () => {
                 isCheckedIn={!!checkedIn[area.id]}
                 isLoading={checkInLoadingId === area.id}
                 isFutureDay={isFutureDay}
+                selectedDateStr={selectedDateStr}
+                onCheckIn={handleCheckIn}
+                onUndoCheckIn={handleUndoCheckIn}
+                isGym={isGym}
+                hasGymProgram={hasGymProgram}
+                gymDayLabel={gymDayInfo?.areaId === area.id ? gymDayInfo.dayLabel : undefined}
+                gymDayName={gymDayInfo?.areaId === area.id ? gymDayInfo.dayName : undefined}
+                note={notes[area.id] || ""}
+                onSaveNote={handleSaveNote}
+              />
+                key={area.id}
+                area={area}
+                isCheckedIn={!!checkedIn[area.id]}
+                isLoading={checkInLoadingId === area.id}
+                isFutureDay={isFutureDay}
                 onCheckIn={handleCheckIn}
                 onUndoCheckIn={handleUndoCheckIn}
                 isGym={isGym}
