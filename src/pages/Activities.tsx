@@ -6,6 +6,7 @@ import { useDemo } from "@/hooks/useDemo";
 import { useI18n } from "@/hooks/useI18n";
 import { Plus, ChevronRight, Heart, BookOpen, TrendingDown, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
+import { format } from "date-fns";
 import { getDemoAreas } from "@/lib/demoData";
 import type { Database } from "@/integrations/supabase/types";
 import type { TranslationKey } from "@/i18n/translations";
@@ -27,6 +28,9 @@ const Areas = () => {
   const navigate = useNavigate();
   const [areas, setAreas] = useState<Area[]>([]);
   const [loading, setLoading] = useState(true);
+  const [todayQuantities, setTodayQuantities] = useState<Record<string, number>>({});
+
+  const todayStr = format(new Date(), "yyyy-MM-dd");
 
   const fetchAreas = useCallback(async () => {
     if (isDemo) {
@@ -38,9 +42,25 @@ const Areas = () => {
     const { data } = await supabase
       .from("areas").select("*").eq("user_id", user.id)
       .is("archived_at", null).order("created_at", { ascending: true });
-    if (data) setAreas(data);
+    if (data) {
+      setAreas(data);
+      // Fetch today quantities for quantity_reduce areas
+      const qAreas = data.filter((a) => a.tracking_mode === "quantity_reduce");
+      if (qAreas.length > 0) {
+        const { data: qData } = await supabase
+          .from("habit_quantity_daily" as any)
+          .select("area_id, quantity")
+          .in("area_id", qAreas.map((a) => a.id))
+          .eq("date", todayStr);
+        if (qData) {
+          const map: Record<string, number> = {};
+          for (const r of qData as any[]) map[r.area_id] = r.quantity;
+          setTodayQuantities(map);
+        }
+      }
+    }
     setLoading(false);
-  }, [user, isDemo]);
+  }, [user, isDemo, todayStr]);
 
   useEffect(() => { fetchAreas(); }, [fetchAreas]);
 
@@ -73,7 +93,7 @@ const Areas = () => {
         {!isDemo && (
           <button onClick={() => navigate("/activities/new")}
             className="flex items-center justify-center h-10 w-10 min-h-[44px] min-w-[44px]">
-            <Plus size={24} strokeWidth={1.5} className="text-[#7DA3A0]" />
+            <Plus size={24} strokeWidth={1.5} className="text-primary" />
           </button>
         )}
       </div>
@@ -83,19 +103,30 @@ const Areas = () => {
           return (
             <div key={type} className="space-y-3">
               <div className="flex items-center gap-2">
-                <Icon size={16} strokeWidth={1.5} className="text-[#B9C0C1]" />
-                <span className="text-sm font-medium text-[#B9C0C1]">{t(labelKey)}</span>
+                <Icon size={16} strokeWidth={1.5} className="text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">{t(labelKey)}</span>
               </div>
-              {items.map((area) => (
-                <button key={area.id} onClick={() => navigate(`/activities/${area.id}`)}
-                  className="w-full flex items-center justify-between rounded-lg bg-[#1F4A50] px-4 min-h-[48px] hover:opacity-90 transition-opacity">
-                  <span className="text-base text-foreground truncate mr-3">{area.name}</span>
-                  <ChevronRight size={18} strokeWidth={1.5} className="text-[#B9C0C1] flex-shrink-0" />
-                </button>
-              ))}
+              {items.map((area) => {
+                const isQuantity = area.tracking_mode === "quantity_reduce";
+                const qty = todayQuantities[area.id] ?? 0;
+                return (
+                  <button key={area.id} onClick={() => navigate(`/activities/${area.id}`)}
+                    className="w-full flex items-center justify-between rounded-lg bg-card px-4 min-h-[48px] hover:opacity-90 transition-opacity">
+                    <span className="text-base text-foreground truncate mr-3">{area.name}</span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {isQuantity && (
+                        <span className="text-sm text-muted-foreground">
+                          {qty} {t("reduce.today")}
+                        </span>
+                      )}
+                      <ChevronRight size={18} strokeWidth={1.5} className="text-muted-foreground" />
+                    </div>
+                  </button>
+                );
+              })}
               {!isDemo && (
                 <button onClick={() => navigate(`/activities/new?type=${type}`)}
-                  className="text-sm font-medium text-[#7DA3A0] hover:opacity-80 transition-opacity min-h-[36px] flex items-center">
+                  className="text-sm font-medium text-primary hover:opacity-80 transition-opacity min-h-[36px] flex items-center">
                   {t("areas.add")}
                 </button>
               )}
