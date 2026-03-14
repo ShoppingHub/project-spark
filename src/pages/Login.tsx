@@ -197,12 +197,25 @@ const Login = () => {
 
   const isLogin = tab === "login";
 
+  // Import icon
+  const loginIcon = new URL("@/assets/login-icon.svg", import.meta.url).href;
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 max-w-[428px] mx-auto">
       <div className="flex flex-col items-center gap-8 w-full">
+        {/* Icon */}
+        <img src={loginIcon} alt="Opad Icon" className="w-24 h-24" />
+
+        {/* Logo */}
         <div className="flex flex-col items-center gap-2">
           <h1 className="text-[28px] font-semibold leading-[1.2]"><span className="text-foreground">opad</span><span style={{ color: '#B5453A' }}>.me</span></h1>
-          <p className="text-sm text-muted-foreground">{t("app.tagline")}</p>
+        </div>
+
+        {/* Tagline - 3 lines */}
+        <div className="text-center space-y-0">
+          <p className="text-sm text-muted-foreground leading-relaxed">{t("app.tagline.line1")}</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">{t("app.tagline.line2")}</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">{t("app.tagline.line3")}</p>
         </div>
 
         <div className="flex w-full rounded-xl bg-card ring-1 ring-border overflow-hidden">
