@@ -22,8 +22,6 @@ export default function AreaDetail() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [area, setArea] = useState<Area | null>(null);
-  const [timeRange, setTimeRange] = useState<TimeRange>("30d");
-  const [scores, setScores] = useState<{ date: string; score: number }[]>([]);
   const [checkinMap, setCheckinMap] = useState<Record<string, boolean>>({});
   const [todayCheckedIn, setTodayCheckedIn] = useState(false);
   const [scoreVisible, setScoreVisible] = useState(false);
