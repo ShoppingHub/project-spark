@@ -2,9 +2,6 @@ export type Locale = "en" | "it";
 
 const translations = {
   // App
-  "app.tagline.line1": { en: "Your path", it: "La tua strada" },
-  "app.tagline.line2": { en: "Your direction", it: "La tua direzione" },
-  "app.tagline.line3": { en: "Over time", it: "Nel tempo" },
   "app.tagline": { en: "Observe your direction.", it: "Osserva la tua direzione." },
 
   // Bottom nav
