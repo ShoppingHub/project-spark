@@ -16,12 +16,29 @@ const ResetPassword = () => {
   const [validSession, setValidSession] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash.includes("type=recovery") || hash.includes("access_token")) {
-      setValidSession(true);
-    } else {
-      supabase.auth.getSession().then(({ data: { session } }) => { setValidSession(!!session); });
-    }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
+        setValidSession(true);
+      }
+    });
+
+    // Also check if session already exists (e.g. page refresh)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setValidSession(true);
+      else {
+        // If no session and no recovery hash, mark invalid after a delay
+        const hash = window.location.hash;
+        if (!hash.includes("type=recovery") && !hash.includes("access_token")) {
+          setValidSession(false);
+        }
+        // If hash present, wait for onAuthStateChange to fire
+        setTimeout(() => {
+          setValidSession((prev) => prev === null ? false : prev);
+        }, 5000);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleReset = async () => {
