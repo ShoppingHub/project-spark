@@ -6,7 +6,7 @@ import { useDemo } from "@/hooks/useDemo";
 import { useI18n } from "@/hooks/useI18n";
 import { Eye } from "lucide-react";
 import { motion } from "framer-motion";
-import { format, isAfter, isSameDay } from "date-fns";
+import { format, isAfter, isSameDay, getISODay } from "date-fns";
 import { getDemoAreas, getDemoTodayCheckins } from "@/lib/demoData";
 import { WeekSelector } from "@/components/home/WeekSelector";
 import { ActivityCard } from "@/components/home/ActivityCard";
@@ -19,6 +19,11 @@ interface GymDayInfo {
   dayLabel: string;
   dayName: string;
   hasProgram: boolean;
+}
+
+interface ScheduledDay {
+  area_id: string;
+  day_of_week: number;
 }
 
 const Index = () => {
@@ -36,11 +41,12 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [checkInLoadingId, setCheckInLoadingId] = useState<string | null>(null);
   const [gymDayInfo, setGymDayInfo] = useState<GymDayInfo | null>(null);
-  // Track which dates have any check-in (for week selector dots)
   const [checkedDates, setCheckedDates] = useState<Set<string>>(new Set());
+  const [scheduledDays, setScheduledDays] = useState<ScheduledDay[]>([]);
 
   const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
   const isFutureDay = isAfter(selectedDate, today) && !isSameDay(selectedDate, today);
+  const selectedDayOfWeek = getISODay(selectedDate); // 1=Mon ... 7=Sun
 
   // Fetch areas once
   useEffect(() => {
@@ -50,15 +56,31 @@ const Index = () => {
     }
     if (!user) return;
     (async () => {
-      const { data } = await supabase
-        .from("areas")
-        .select("*")
-        .eq("user_id", user.id)
-        .is("archived_at", null)
-        .order("created_at", { ascending: true });
-      setAreas(data || []);
+      const [areasRes, scheduledRes] = await Promise.all([
+        supabase
+          .from("areas")
+          .select("*")
+          .eq("user_id", user.id)
+          .is("archived_at", null)
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("area_scheduled_days")
+          .select("area_id, day_of_week")
+          .eq("user_id", user.id),
+      ]);
+      setAreas(areasRes.data || []);
+      setScheduledDays((scheduledRes.data as ScheduledDay[]) || []);
     })();
   }, [user, isDemo]);
+
+  // Filter areas by scheduled day
+  const filteredAreas = useMemo(() => {
+    return areas.filter(area => {
+      const areaSchedule = scheduledDays.filter(sd => sd.area_id === area.id);
+      if (areaSchedule.length === 0) return true; // no schedule = show every day
+      return areaSchedule.some(sd => sd.day_of_week === selectedDayOfWeek);
+    });
+  }, [areas, scheduledDays, selectedDayOfWeek]);
 
   // Fetch check-ins + notes for selected date
   const fetchDayData = useCallback(async () => {
@@ -190,7 +212,6 @@ const Index = () => {
         { onConflict: "area_id,date" }
       );
       if (error) throw error;
-      // Trigger score calculation for today only
       if (isSameDay(selectedDate, today)) {
         const { data: sessionData } = await supabase.auth.getSession();
         await supabase.functions.invoke("calculate-score", {
@@ -230,7 +251,6 @@ const Index = () => {
     if (isDemo || !user) return;
     const trimmed = content.trim();
     if (trimmed.length === 0) {
-      // Delete note
       setNotes((prev) => { const n = { ...prev }; delete n[areaId]; return n; });
       await supabase
         .from("activity_notes" as any)
@@ -247,7 +267,7 @@ const Index = () => {
     }
   };
 
-  const allCheckedIn = areas.length > 0 && areas.every((a) => checkedIn[a.id]);
+  const allCheckedIn = filteredAreas.length > 0 && filteredAreas.every((a) => checkedIn[a.id]);
 
   return (
     <div className="flex flex-col min-h-full">
@@ -291,6 +311,10 @@ const Index = () => {
             {t("home.empty.button")}
           </button>
         </div>
+      ) : filteredAreas.length === 0 ? (
+        <div className="flex flex-1 flex-col items-center justify-center px-4 py-16">
+          <p className="text-sm text-muted-foreground text-center">{t("home.noScheduled")}</p>
+        </div>
       ) : (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -298,7 +322,7 @@ const Index = () => {
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="flex flex-col gap-3 px-4 pb-4"
         >
-          {areas.map((area) => {
+          {filteredAreas.map((area) => {
             const isGym =
               area.type === "health" && /^(gym|palestra)$/i.test(area.name);
             const hasGymProgram = isGym && (gymDayInfo?.areaId === area.id) && (gymDayInfo?.hasProgram ?? false);
