@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,7 +8,7 @@ import { Eye, TrendingUp } from "lucide-react";
 import { TimeRangeSelector, type TimeRange } from "@/components/TimeRangeSelector";
 import { motion } from "framer-motion";
 import { subDays, format } from "date-fns";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, ReferenceLine, ReferenceDot } from "recharts";
 import { getDemoAreas, getDemoScoresForRange } from "@/lib/demoData";
 import type { Database } from "@/integrations/supabase/types";
 import type { TranslationKey } from "@/i18n/translations";
@@ -40,9 +40,9 @@ function computeSlope(data: { score: number }[]): number {
 }
 
 function getLineColor(slope: number): string {
-  if (slope > 0.1) return "#7DA3A0";
-  if (slope < -0.1) return "#BFA37A";
-  return "#8C9496";
+  if (slope > 0.1) return "hsl(174, 16%, 56%)";   // --primary / teal
+  if (slope < -0.1) return "hsl(0, 72%, 59%)";     // red like Revolut declining
+  return "hsl(195, 5%, 56%)";                       // --graph-neutral
 }
 
 const Progress = () => {
@@ -92,12 +92,12 @@ const Progress = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const { chartData, lineColor } = useMemo(() => {
+  const { chartData, lineColor, firstScore, lastScore, minScore, maxScore } = useMemo(() => {
     const filteredAreas = filter === "all"
       ? areas
       : areas.filter((a) => a.type === filter);
 
-    if (filteredAreas.length === 0) return { chartData: [], lineColor: "#8C9496" };
+    if (filteredAreas.length === 0) return { chartData: [], lineColor: "hsl(195, 5%, 56%)", firstScore: 0, lastScore: 0, minScore: 0, maxScore: 0 };
 
     const dateMap: Record<string, number[]> = {};
     for (const area of filteredAreas) {
@@ -116,10 +116,26 @@ const Progress = () => {
       .sort((a, b) => a.date.localeCompare(b.date));
 
     const slope = computeSlope(averaged);
-    return { chartData: averaged, lineColor: getLineColor(slope) };
+    const scores_arr = averaged.map(d => d.score);
+    const min = scores_arr.length > 0 ? Math.min(...scores_arr) : 0;
+    const max = scores_arr.length > 0 ? Math.max(...scores_arr) : 0;
+    return {
+      chartData: averaged,
+      lineColor: getLineColor(slope),
+      firstScore: averaged.length > 0 ? averaged[0].score : 0,
+      lastScore: averaged.length > 0 ? averaged[averaged.length - 1].score : 0,
+      minScore: min,
+      maxScore: max,
+    };
   }, [areas, scores, filter]);
 
   const hasData = chartData.length > 0 && chartData.some((d) => d.score !== 0);
+
+  // Format score for display
+  const fmt = (n: number) => {
+    if (Math.abs(n) >= 1000) return n.toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return n.toFixed(1);
+  };
 
   // Loading state
   if (loading) {
@@ -129,15 +145,12 @@ const Progress = () => {
           <div className="flex items-center px-4 h-14">
             <span className="text-[18px] font-semibold">{t("nav.progress")}</span>
           </div>
-          <div className="flex justify-center px-4 pb-3">
-            <TimeRangeSelector value={timeRange} onChange={setTimeRange} disabled />
-          </div>
         </div>
         <div className="flex flex-col gap-4 px-4 pb-4">
-          <div className="rounded-xl bg-[#1F4A50] animate-pulse" style={{ height: "60vh" }} />
+          <div className="animate-pulse bg-card rounded-xl" style={{ height: "55vh" }} />
           <div className="flex gap-2">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-8 w-20 rounded-full bg-[#1F4A50] animate-pulse flex-shrink-0" />
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-8 w-12 rounded-full bg-card animate-pulse" />
             ))}
           </div>
         </div>
@@ -155,7 +168,7 @@ const Progress = () => {
           </div>
         </div>
         <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-16">
-          <Eye size={48} className="text-[#7DA3A0]" strokeWidth={1.5} />
+          <Eye size={48} className="text-primary" strokeWidth={1.5} />
           <div className="text-center space-y-2">
             <p className="text-[18px] font-medium">{t("progress.empty.title")}</p>
             <p className="text-sm text-muted-foreground">{t("progress.empty.description")}</p>
@@ -171,41 +184,92 @@ const Progress = () => {
     );
   }
 
+  // Compute Y domain with padding
+  const yPadding = (maxScore - minScore) * 0.15 || 1;
+  const yDomainMin = minScore - yPadding;
+  const yDomainMax = maxScore + yPadding;
+
+  const lastPoint = chartData.length > 0 ? chartData[chartData.length - 1] : null;
+
   return (
     <div className="flex flex-col min-h-full">
       <div className="sticky top-0 z-40 bg-background">
         <div className="flex items-center px-4 h-14">
           <span className="text-[18px] font-semibold">{t("nav.progress")}</span>
         </div>
-        <div className="flex justify-center px-4 pb-3">
-          <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
-        </div>
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="flex flex-col gap-4 px-4 pb-4"
+        className="flex flex-col gap-4 px-0 pb-4"
       >
         {hasData ? (
-          <div className="rounded-xl bg-[#1F4A50] p-4" style={{ height: "60vh" }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="0" horizontal vertical={false}
-                  stroke="#EAEAEA" strokeOpacity={0.1} />
-                <XAxis dataKey="date" tick={{ fill: "#B9C0C1", fontSize: 12 }}
-                  axisLine={false} tickLine={false}
-                  tickFormatter={(d: string) => `${new Date(d).getDate()}/${new Date(d).getMonth() + 1}`}
-                  interval="preserveStartEnd" />
-                <YAxis hide />
-                <Line type="monotone" dataKey="score" stroke={lineColor} strokeWidth={2}
-                  dot={false} isAnimationActive animationDuration={300} animationEasing="ease-in-out" />
-              </LineChart>
-            </ResponsiveContainer>
+          <div className="relative">
+            {/* Score labels - Revolut style */}
+            <div className="absolute top-2 right-4 z-10 text-right">
+              <p className="text-xl font-semibold text-foreground tabular-nums">{fmt(lastScore)}</p>
+            </div>
+
+            {/* First score label on the left */}
+            <div className="absolute top-2 left-4 z-10">
+              <p className="text-xs text-muted-foreground tabular-nums">{fmt(firstScore)}</p>
+            </div>
+
+            {/* Chart area - full width, no container bg */}
+            <div style={{ height: "55vh" }} className="w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 40, right: 16, bottom: 8, left: 16 }}>
+                  {/* Reference line at first score (dotted) */}
+                  <ReferenceLine
+                    y={firstScore}
+                    stroke="hsl(190, 5%, 75%)"
+                    strokeDasharray="3 3"
+                    strokeOpacity={0.4}
+                  />
+                  <XAxis
+                    dataKey="date"
+                    tick={false}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    hide
+                    domain={[yDomainMin, yDomainMax]}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="score"
+                    stroke={lineColor}
+                    strokeWidth={2.5}
+                    dot={false}
+                    isAnimationActive
+                    animationDuration={400}
+                    animationEasing="ease-in-out"
+                  />
+                  {/* Dot at last point */}
+                  {lastPoint && (
+                    <ReferenceDot
+                      x={lastPoint.date}
+                      y={lastPoint.score}
+                      r={5}
+                      fill={lineColor}
+                      stroke="none"
+                    />
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Min/Max labels at bottom edges */}
+            <div className="flex justify-between px-4 -mt-2">
+              <p className="text-xs text-muted-foreground tabular-nums">{fmt(minScore)}</p>
+              <p className="text-xs text-muted-foreground tabular-nums">{fmt(maxScore)}</p>
+            </div>
           </div>
         ) : (
-          <div className="rounded-xl bg-[#1F4A50] flex flex-col items-center justify-center gap-4"
-            style={{ height: "60vh" }}>
+          <div className="flex flex-col items-center justify-center gap-4 px-4"
+            style={{ height: "55vh" }}>
             <TrendingUp size={48} className="text-muted-foreground" strokeWidth={1.5} />
             <p className="text-sm text-muted-foreground text-center px-8">
               {t("dashboard.emptyFilter")}
@@ -213,14 +277,19 @@ const Progress = () => {
           </div>
         )}
 
+        {/* Time range selector - Revolut style pills */}
+        <div className="flex justify-center px-4">
+          <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
+        </div>
+
         {/* MacroAreaSelector */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto pb-1 px-4 scrollbar-hide">
           {filterOptions.map(({ value, labelKey }) => {
             const active = filter === value;
             return (
               <button key={value} onClick={() => setFilter(value)}
                 className={`flex-shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors min-h-[36px] ${
-                  active ? "bg-[#7DA3A0] text-[#0F2F33]" : "border border-[#B9C0C1]/30 text-[#B9C0C1]"
+                  active ? "bg-primary text-primary-foreground" : "border border-muted-foreground/30 text-muted-foreground"
                 }`}>
                 {t(labelKey)}
               </button>

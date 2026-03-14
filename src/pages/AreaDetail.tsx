@@ -4,37 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useDemo } from "@/hooks/useDemo";
 import { useI18n } from "@/hooks/useI18n";
-import { ArrowLeft, TrendingUp } from "lucide-react";
-import { TimeRangeSelector, type TimeRange } from "@/components/TimeRangeSelector";
+import { ArrowLeft } from "lucide-react";
 import { AreaTypePill } from "@/components/AreaTypePill";
 import { CalendarHeatmap } from "@/components/CalendarHeatmap";
 import { GymCard } from "@/components/GymCard";
 import { motion } from "framer-motion";
 import { subDays, format } from "date-fns";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
-import { getDemoAreas, getDemoScoresForRange, getDemoCheckinsLast30, getDemoTodayCheckins } from "@/lib/demoData";
+import { getDemoAreas, getDemoCheckinsLast30, getDemoTodayCheckins } from "@/lib/demoData";
 import type { Database } from "@/integrations/supabase/types";
 
 type Area = Database["public"]["Tables"]["areas"]["Row"];
-const rangeToDays: Record<TimeRange, number> = { "30d": 30, "90d": 90, "365d": 365 };
-
-function computeSlope(data: { score: number }[]): number {
-  if (data.length < 2) return 0;
-  const last7 = data.slice(-7);
-  if (last7.length < 2) return 0;
-  const n = last7.length;
-  const sumX = last7.reduce((s, _, i) => s + i, 0);
-  const sumY = last7.reduce((s, d) => s + d.score, 0);
-  const sumXY = last7.reduce((s, d, i) => s + i * d.score, 0);
-  const sumX2 = last7.reduce((s, _, i) => s + i * i, 0);
-  return (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-}
-
-function getLineColor(slope: number): string {
-  if (slope > 0.1) return "#7DA3A0";
-  if (slope < -0.1) return "#BFA37A";
-  return "#8C9496";
-}
 
 export default function AreaDetail() {
   const { id } = useParams();
@@ -43,11 +22,8 @@ export default function AreaDetail() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [area, setArea] = useState<Area | null>(null);
-  const [timeRange, setTimeRange] = useState<TimeRange>("30d");
-  const [scores, setScores] = useState<{ date: string; score: number }[]>([]);
   const [checkinMap, setCheckinMap] = useState<Record<string, boolean>>({});
   const [todayCheckedIn, setTodayCheckedIn] = useState(false);
-  const [scoreVisible, setScoreVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [checkInLoading, setCheckInLoading] = useState(false);
   const [checkInError, setCheckInError] = useState("");
@@ -60,12 +36,9 @@ export default function AreaDetail() {
       const demoArea = getDemoAreas().find((a) => a.id === id);
       if (!demoArea) { setLoading(false); return; }
       setArea(demoArea);
-      const demoScores = getDemoScoresForRange(rangeToDays[timeRange]);
-      setScores(demoScores[id] || []);
       setCheckinMap(getDemoCheckinsLast30(id));
       const todayMap = getDemoTodayCheckins();
       setTodayCheckedIn(!!todayMap[id]);
-      setScoreVisible(true);
       setLoading(false);
       return;
     }
@@ -74,26 +47,21 @@ export default function AreaDetail() {
     const { data: areaData } = await supabase.from("areas").select("*").eq("id", id).single();
     if (!areaData) { setLoading(false); return; }
     setArea(areaData);
-    const startDate = format(subDays(new Date(), rangeToDays[timeRange]), "yyyy-MM-dd");
-    const [scoresRes, checkinsRes, todayRes, userRes] = await Promise.all([
-      supabase.from("score_daily").select("*").eq("area_id", id).gte("date", startDate).order("date", { ascending: true }),
+    const [checkinsRes, todayRes] = await Promise.all([
       supabase.from("checkins").select("date, completed").eq("area_id", id).eq("user_id", user.id).gte("date", format(subDays(new Date(), 29), "yyyy-MM-dd")),
       supabase.from("checkins").select("completed").eq("area_id", id).eq("user_id", user.id).eq("date", today).single(),
-      supabase.from("users").select("settings_score_visible").eq("user_id", user.id).single(),
     ]);
-    if (scoresRes.data) { setScores(scoresRes.data.map((s) => ({ date: s.date, score: s.cumulative_score }))); }
     const cMap: Record<string, boolean> = {};
     if (checkinsRes.data) { for (const c of checkinsRes.data) { cMap[c.date] = c.completed; } }
     setCheckinMap(cMap);
     setTodayCheckedIn(todayRes.data?.completed ?? false);
-    setScoreVisible(userRes.data?.settings_score_visible ?? false);
     setLoading(false);
-  }, [user, isDemo, id, timeRange, today]);
+  }, [user, isDemo, id, today]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleCheckIn = async () => {
-    if (isDemo) return; // no-op in demo
+    if (isDemo) return;
     if (!user || !id) return;
     setCheckInLoading(true); setCheckInError("");
     try {
@@ -109,23 +77,16 @@ export default function AreaDetail() {
       });
       setTodayCheckedIn(true);
       setCheckinMap((prev) => ({ ...prev, [today]: true }));
-      const startDate = format(subDays(new Date(), rangeToDays[timeRange]), "yyyy-MM-dd");
-      const { data: newScores } = await supabase.from("score_daily").select("*").eq("area_id", id).gte("date", startDate).order("date", { ascending: true });
-      if (newScores) { setScores(newScores.map((s) => ({ date: s.date, score: s.cumulative_score }))); }
     } catch { setCheckInError(t("dashboard.error")); }
     finally { setCheckInLoading(false); }
   };
-
-  const slope = computeSlope(scores);
-  const lineColor = getLineColor(slope);
-  const chartData = scores.length > 0 ? scores : [{ date: today, score: 0 }];
-  const latestScore = scores.length > 0 ? scores[scores.length - 1].score : 0;
 
   if (loading) {
     return (
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeInOut" }} className="flex flex-col px-4 pt-2 pb-8 gap-4">
         <div className="flex items-center gap-3 h-14"><div className="h-6 w-6 rounded bg-card animate-pulse" /><div className="h-5 w-32 rounded bg-card animate-pulse" /></div>
-        <div className="rounded-xl bg-card animate-pulse" style={{ height: "60vh" }} />
+        <div className="rounded-xl bg-card animate-pulse h-20" />
+        <div className="rounded-xl bg-card animate-pulse h-20" />
       </motion.div>
     );
   }
@@ -134,7 +95,6 @@ export default function AreaDetail() {
     return (<div className="flex min-h-[60vh] items-center justify-center px-4"><p className="text-sm text-muted-foreground">{t("areaDetail.notFound")}</p></div>);
   }
 
-  const hasData = scores.length > 0 && scores.some((s) => s.score !== 0);
   const isGymArea = area.type === "health" && /^(gym|palestra)$/i.test(area.name);
 
   const handleAutoCheckIn = async () => {
@@ -151,9 +111,6 @@ export default function AreaDetail() {
       });
       setTodayCheckedIn(true);
       setCheckinMap((prev) => ({ ...prev, [today]: true }));
-      const startDate = format(subDays(new Date(), rangeToDays[timeRange]), "yyyy-MM-dd");
-      const { data: newScores } = await supabase.from("score_daily").select("*").eq("area_id", id).gte("date", startDate).order("date", { ascending: true });
-      if (newScores) { setScores(newScores.map((s) => ({ date: s.date, score: s.cumulative_score }))); }
     } catch { /* silent */ }
   };
 
@@ -169,46 +126,19 @@ export default function AreaDetail() {
           <button onClick={() => navigate(`/activities/${id}/edit`)} className="text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] flex items-center">{t("areaDetail.editArea")}</button>
         )}
       </div>
-      <div className="flex justify-center py-3"><TimeRangeSelector value={timeRange} onChange={setTimeRange} /></div>
-
-      {hasData ? (
-        <div className="rounded-xl bg-card p-4" style={{ height: "60vh" }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-              <CartesianGrid strokeDasharray="0" horizontal vertical={false} stroke="#EAEAEA" strokeOpacity={0.1} />
-              <XAxis dataKey="date" tick={{ fill: "#B9C0C1", fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(d: string) => `${new Date(d).getDate()}/${new Date(d).getMonth() + 1}`} interval="preserveStartEnd" />
-              <YAxis hide />
-              <Line type="monotone" dataKey="score" stroke={lineColor} strokeWidth={2} dot={false} isAnimationActive animationDuration={300} animationEasing="ease-in-out" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      ) : (
-        <div className="rounded-xl bg-card flex flex-col items-center justify-center gap-4" style={{ height: "60vh" }}>
-          <TrendingUp size={48} className="text-muted-foreground" strokeWidth={1.5} />
-          <p className="text-sm text-muted-foreground text-center px-8">{t("areaDetail.emptyGraph")}</p>
-        </div>
-      )}
 
       <div className="mt-4"><CalendarHeatmap checkins={checkinMap} /></div>
-
-      {scoreVisible && (
-        <div className="mt-4 space-y-1">
-          <p className="text-sm text-muted-foreground">{t("areaDetail.score")}</p>
-          <p className="text-[28px] font-semibold">{latestScore.toFixed(1)}</p>
-        </div>
-      )}
 
       {!isDemo && (
         <div className="mt-4">
           <button onClick={handleCheckIn} disabled={todayCheckedIn || checkInLoading}
-            className={`w-full min-h-[44px] rounded-lg text-base font-medium border transition-all flex items-center justify-center gap-2 ${todayCheckedIn ? "bg-[#7DA3A0]/20 text-[#7DA3A0] border-[#7DA3A0]" : "bg-transparent text-foreground border-[#7DA3A0]"} ${checkInLoading ? "opacity-50 cursor-not-allowed" : ""}`}>
+            className={`w-full min-h-[44px] rounded-lg text-base font-medium border transition-all flex items-center justify-center gap-2 ${todayCheckedIn ? "bg-primary/20 text-primary border-primary" : "bg-transparent text-foreground border-primary"} ${checkInLoading ? "opacity-50 cursor-not-allowed" : ""}`}>
             {checkInLoading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> : todayCheckedIn ? t("card.observed") : t("card.logToday")}
           </button>
         </div>
       )}
       {checkInError && <p className="mt-2 text-sm text-destructive text-center">{checkInError}</p>}
 
-      {/* Gym Card */}
       {!isDemo && isGymArea && id && (
         <GymCard areaId={id} onAutoCheckIn={handleAutoCheckIn} />
       )}
