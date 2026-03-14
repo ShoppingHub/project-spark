@@ -14,25 +14,6 @@ import { getDemoAreas, getDemoCheckinsLast30, getDemoTodayCheckins } from "@/lib
 import type { Database } from "@/integrations/supabase/types";
 
 type Area = Database["public"]["Tables"]["areas"]["Row"];
-const rangeToDays: Record<TimeRange, number> = { "30d": 30, "90d": 90, "365d": 365 };
-
-function computeSlope(data: { score: number }[]): number {
-  if (data.length < 2) return 0;
-  const last7 = data.slice(-7);
-  if (last7.length < 2) return 0;
-  const n = last7.length;
-  const sumX = last7.reduce((s, _, i) => s + i, 0);
-  const sumY = last7.reduce((s, d) => s + d.score, 0);
-  const sumXY = last7.reduce((s, d, i) => s + i * d.score, 0);
-  const sumX2 = last7.reduce((s, _, i) => s + i * i, 0);
-  return (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-}
-
-function getLineColor(slope: number): string {
-  if (slope > 0.1) return "#7DA3A0";
-  if (slope < -0.1) return "#BFA37A";
-  return "#8C9496";
-}
 
 export default function AreaDetail() {
   const { id } = useParams();
