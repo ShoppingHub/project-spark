@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_notes: {
+        Row: {
+          area_id: string
+          content: string
+          created_at: string
+          date: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          area_id: string
+          content: string
+          created_at?: string
+          date: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          area_id?: string
+          content?: string
+          created_at?: string
+          date?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_notes_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       areas: {
         Row: {
           archived_at: string | null
