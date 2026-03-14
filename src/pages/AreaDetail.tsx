@@ -24,6 +24,7 @@ export default function AreaDetail() {
   const navigate = useNavigate();
   const [area, setArea] = useState<Area | null>(null);
   const [loading, setLoading] = useState(true);
+  const today = format(new Date(), "yyyy-MM-dd");
 
   const fetchData = useCallback(async () => {
     if (!id) return;
