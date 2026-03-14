@@ -8,7 +8,9 @@ import { ArrowLeft } from "lucide-react";
 import { AreaTypePill } from "@/components/AreaTypePill";
 import { ScheduledDaysSection } from "@/components/area-detail/ScheduledDaysSection";
 import { NotesHistorySection } from "@/components/area-detail/NotesHistorySection";
+import { GymCard } from "@/components/GymCard";
 import { motion } from "framer-motion";
+import { format } from "date-fns";
 import { getDemoAreas } from "@/lib/demoData";
 import type { Database } from "@/integrations/supabase/types";
 
