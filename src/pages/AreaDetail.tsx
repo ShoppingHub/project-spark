@@ -4,15 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useDemo } from "@/hooks/useDemo";
 import { useI18n } from "@/hooks/useI18n";
-import { ArrowLeft, TrendingUp } from "lucide-react";
-import { TimeRangeSelector, type TimeRange } from "@/components/TimeRangeSelector";
+import { ArrowLeft } from "lucide-react";
 import { AreaTypePill } from "@/components/AreaTypePill";
 import { CalendarHeatmap } from "@/components/CalendarHeatmap";
 import { GymCard } from "@/components/GymCard";
 import { motion } from "framer-motion";
 import { subDays, format } from "date-fns";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
-import { getDemoAreas, getDemoScoresForRange, getDemoCheckinsLast30, getDemoTodayCheckins } from "@/lib/demoData";
+import { getDemoAreas, getDemoCheckinsLast30, getDemoTodayCheckins } from "@/lib/demoData";
 import type { Database } from "@/integrations/supabase/types";
 
 type Area = Database["public"]["Tables"]["areas"]["Row"];
