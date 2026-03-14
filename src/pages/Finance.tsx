@@ -4,14 +4,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/hooks/useI18n";
 import { BarChart2 } from "lucide-react";
-import { TimeRangeSelector, type TimeRange } from "@/components/TimeRangeSelector";
+import { TimeRangeSelector, rangeToDays, type TimeRange } from "@/components/TimeRangeSelector";
 import { motion } from "framer-motion";
 import { subDays, addDays, format } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import type { Database } from "@/integrations/supabase/types";
 
 type Area = Database["public"]["Tables"]["areas"]["Row"];
-const rangeToDays: Record<TimeRange, number> = { "30d": 30, "90d": 90, "365d": 365 };
+
+const financeRanges = [
+  { value: "1m" as TimeRange, label: "1m" },
+  { value: "3m" as TimeRange, label: "3m" },
+  { value: "1y" as TimeRange, label: "1a" },
+];
 
 function computeSlope(data: { score: number }[]): number {
   if (data.length < 2) return 0;
@@ -50,7 +55,7 @@ const Finance = () => {
   const { user } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
-  const [timeRange, setTimeRange] = useState<TimeRange>("30d");
+  const [timeRange, setTimeRange] = useState<TimeRange>("1m");
   const [financeArea, setFinanceArea] = useState<Area | null | undefined>(undefined);
   const [scores, setScores] = useState<{ date: string; score: number }[]>([]);
   const [hasCheckins, setHasCheckins] = useState(false);
@@ -125,7 +130,7 @@ const Finance = () => {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeInOut" }} className="flex flex-col px-4 pt-2 pb-8">
       <div className="h-14 flex items-center"><h1 className="text-[18px] font-semibold">{t("finance.title")}</h1></div>
-      <div className="flex justify-center pb-3"><TimeRangeSelector value={timeRange} onChange={setTimeRange} /></div>
+      <div className="flex justify-center pb-3"><TimeRangeSelector value={timeRange} onChange={setTimeRange} ranges={financeRanges} /></div>
       <div className="rounded-xl bg-card p-4" style={{ height: "55vh" }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
