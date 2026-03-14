@@ -52,6 +52,38 @@ export type Database = {
           },
         ]
       }
+      area_scheduled_days: {
+        Row: {
+          area_id: string
+          created_at: string
+          day_of_week: number
+          id: string
+          user_id: string
+        }
+        Insert: {
+          area_id: string
+          created_at?: string
+          day_of_week: number
+          id?: string
+          user_id: string
+        }
+        Update: {
+          area_id?: string
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "area_scheduled_days_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       areas: {
         Row: {
           archived_at: string | null
