@@ -227,6 +227,9 @@ const translations = {
   "reduce.showQuickAdd": { en: "Show quick-add on Home", it: "Mostra contatore rapido in Home" },
   "reduce.recorded": { en: "recorded", it: "registrato" },
   "reduce.today": { en: "today", it: "oggi" },
+
+  // Home - no scheduled activities
+  "home.noScheduled": { en: "No activities scheduled for this day.", it: "Nessuna attività programmata per questo giorno." },
 } as const;
 
 export type TranslationKey = keyof typeof translations;
