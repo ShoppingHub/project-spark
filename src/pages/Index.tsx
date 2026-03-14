@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,9 +6,10 @@ import { useDemo } from "@/hooks/useDemo";
 import { useI18n } from "@/hooks/useI18n";
 import { Eye } from "lucide-react";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
-import { it, enUS } from "date-fns/locale";
+import { format, isAfter, isSameDay } from "date-fns";
 import { getDemoAreas, getDemoTodayCheckins } from "@/lib/demoData";
+import { WeekSelector } from "@/components/home/WeekSelector";
+import { ActivityCard } from "@/components/home/ActivityCard";
 import type { Database } from "@/integrations/supabase/types";
 
 type Area = Database["public"]["Tables"]["areas"]["Row"];
@@ -17,6 +18,7 @@ interface GymDayInfo {
   areaId: string;
   dayLabel: string;
   dayName: string;
+  hasProgram: boolean;
 }
 
 const Index = () => {
@@ -24,31 +26,64 @@ const Index = () => {
   const { isDemo } = useDemo();
   const { t, locale } = useI18n();
   const navigate = useNavigate();
+
+  const today = useMemo(() => new Date(), []);
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [weekOffset, setWeekOffset] = useState(0);
   const [areas, setAreas] = useState<Area[]>([]);
   const [checkedIn, setCheckedIn] = useState<Record<string, boolean>>({});
+  const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [checkInLoadingId, setCheckInLoadingId] = useState<string | null>(null);
   const [gymDayInfo, setGymDayInfo] = useState<GymDayInfo | null>(null);
+  // Track which dates have any check-in (for week selector dots)
+  const [checkedDates, setCheckedDates] = useState<Set<string>>(new Set());
 
-  const today = format(new Date(), "yyyy-MM-dd");
-  const todayFormatted = format(new Date(), "d MMMM", { locale: locale === "it" ? it : enUS });
+  const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
+  const isFutureDay = isAfter(selectedDate, today) && !isSameDay(selectedDate, today);
 
-  const fetchData = useCallback(async () => {
+  // Fetch areas once
+  useEffect(() => {
     if (isDemo) {
       setAreas(getDemoAreas());
+      return;
+    }
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("areas")
+        .select("*")
+        .eq("user_id", user.id)
+        .is("archived_at", null)
+        .order("created_at", { ascending: true });
+      setAreas(data || []);
+    })();
+  }, [user, isDemo]);
+
+  // Fetch check-ins + notes for selected date
+  const fetchDayData = useCallback(async () => {
+    if (isDemo) {
       setCheckedIn(getDemoTodayCheckins());
+      setNotes({});
       setLoading(false);
       return;
     }
     if (!user) return;
+    setLoading(true);
 
-    const [areasRes, checkinsRes] = await Promise.all([
-      supabase.from("areas").select("*").eq("user_id", user.id).is("archived_at", null).order("created_at", { ascending: true }),
-      supabase.from("checkins").select("area_id, completed").eq("user_id", user.id).eq("date", today).eq("completed", true),
+    const [checkinsRes, notesRes] = await Promise.all([
+      supabase
+        .from("checkins")
+        .select("area_id, completed")
+        .eq("user_id", user.id)
+        .eq("date", selectedDateStr)
+        .eq("completed", true),
+      supabase
+        .from("activity_notes" as any)
+        .select("area_id, content")
+        .eq("user_id", user.id)
+        .eq("date", selectedDateStr),
     ]);
-
-    const areasData = areasRes.data || [];
-    setAreas(areasData);
 
     const map: Record<string, boolean> = {};
     if (checkinsRes.data) {
@@ -56,83 +91,159 @@ const Index = () => {
     }
     setCheckedIn(map);
 
-    // Gym day info
-    const gymArea = areasData.find(
-      (a) => a.type === "health" && /^(gym|palestra)$/i.test(a.name)
-    );
-    if (gymArea) {
-      await fetchGymDayInfo(gymArea.id, user.id);
+    const noteMap: Record<string, string> = {};
+    if (notesRes.data) {
+      for (const n of notesRes.data as any[]) noteMap[n.area_id] = n.content;
     }
+    setNotes(noteMap);
 
     setLoading(false);
-  }, [user, isDemo, today]);
+  }, [user, isDemo, selectedDateStr]);
 
-  const fetchGymDayInfo = async (areaId: string, userId: string) => {
-    try {
-      const { data: program } = await supabase
-        .from("gym_programs").select("id").eq("area_id", areaId).single();
-      if (!program) return;
+  useEffect(() => {
+    fetchDayData();
+  }, [fetchDayData]);
 
-      // Check if today's session exists
-      const { data: todaySession } = await supabase
-        .from("gym_sessions").select("id").eq("area_id", areaId).eq("date", today).single();
-      if (todaySession) return; // already done today
-
-      // Get all days
-      const { data: days } = await supabase
-        .from("gym_program_days").select("id, name, order").eq("program_id", program.id).order("order");
-      if (!days || days.length === 0) return;
-
-      // Get last session to determine next day
-      const { data: lastSession } = await supabase
-        .from("gym_sessions").select("day_id").eq("area_id", areaId).eq("user_id", userId)
-        .order("date", { ascending: false }).limit(1).single();
-
-      let nextDay = days[0];
-      if (lastSession) {
-        const lastIdx = days.findIndex((d) => d.id === lastSession.day_id);
-        nextDay = days[(lastIdx + 1) % days.length];
+  // Fetch week check-in dots
+  useEffect(() => {
+    if (isDemo || !user) return;
+    (async () => {
+      const { addDays, startOfWeek } = await import("date-fns");
+      const weekStart = addDays(startOfWeek(today, { weekStartsOn: 1 }), weekOffset * 7);
+      const weekEnd = addDays(weekStart, 6);
+      const { data } = await supabase
+        .from("checkins")
+        .select("date")
+        .eq("user_id", user.id)
+        .eq("completed", true)
+        .gte("date", format(weekStart, "yyyy-MM-dd"))
+        .lte("date", format(weekEnd, "yyyy-MM-dd"));
+      if (data) {
+        setCheckedDates(new Set(data.map((r) => r.date)));
       }
+    })();
+  }, [user, isDemo, weekOffset, today, checkedIn]);
 
-      // Get muscle group names for this day
-      const { data: groups } = await supabase
-        .from("gym_muscle_groups").select("name").eq("day_id", nextDay.id).order("order");
-      const groupNames = groups?.map((g) => g.name).join(", ") || "";
+  // Fetch gym day info
+  useEffect(() => {
+    if (isDemo || !user || areas.length === 0) return;
+    const gymArea = areas.find(
+      (a) => a.type === "health" && /^(gym|palestra)$/i.test(a.name)
+    );
+    if (!gymArea) { setGymDayInfo(null); return; }
 
-      const dayNumber = nextDay.order + 1;
-      const dayLabel = locale === "it" ? `Giorno ${dayNumber}` : `Day ${dayNumber}`;
+    (async () => {
+      try {
+        const { data: program } = await supabase
+          .from("gym_programs")
+          .select("id")
+          .eq("area_id", gymArea.id)
+          .single();
+        if (!program) { setGymDayInfo({ areaId: gymArea.id, dayLabel: "", dayName: "", hasProgram: false }); return; }
 
-      setGymDayInfo({
-        areaId,
-        dayLabel,
-        dayName: groupNames,
-      });
-    } catch { /* silent */ }
-  };
+        const { data: days } = await supabase
+          .from("gym_program_days")
+          .select("id, name, order")
+          .eq("program_id", program.id)
+          .order("order");
+        if (!days || days.length === 0) { setGymDayInfo({ areaId: gymArea.id, dayLabel: "", dayName: "", hasProgram: true }); return; }
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+        const { data: lastSession } = await supabase
+          .from("gym_sessions")
+          .select("day_id")
+          .eq("area_id", gymArea.id)
+          .eq("user_id", user.id)
+          .order("date", { ascending: false })
+          .limit(1)
+          .single();
 
+        let nextDay = days[0];
+        if (lastSession) {
+          const lastIdx = days.findIndex((d) => d.id === lastSession.day_id);
+          nextDay = days[(lastIdx + 1) % days.length];
+        }
+
+        const { data: groups } = await supabase
+          .from("gym_muscle_groups")
+          .select("name")
+          .eq("day_id", nextDay.id)
+          .order("order");
+        const groupNames = groups?.map((g) => g.name).join(", ") || "";
+        const dayNumber = nextDay.order + 1;
+        const dayLabel = locale === "it" ? `Giorno ${dayNumber}` : `Day ${dayNumber}`;
+
+        setGymDayInfo({ areaId: gymArea.id, dayLabel, dayName: groupNames, hasProgram: true });
+      } catch {
+        setGymDayInfo(null);
+      }
+    })();
+  }, [user, isDemo, areas, locale]);
+
+  // Check-in handler
   const handleCheckIn = async (areaId: string) => {
     if (isDemo || !user) return;
     setCheckInLoadingId(areaId);
-    // Optimistic update
     setCheckedIn((prev) => ({ ...prev, [areaId]: true }));
     try {
       const { error } = await supabase.from("checkins").upsert(
-        { area_id: areaId, user_id: user.id, date: today, completed: true },
+        { area_id: areaId, user_id: user.id, date: selectedDateStr, completed: true },
         { onConflict: "area_id,date" }
       );
       if (error) throw error;
-      const { data: sessionData } = await supabase.auth.getSession();
-      await supabase.functions.invoke("calculate-score", {
-        body: { area_id: areaId, date: today },
-        headers: { Authorization: `Bearer ${sessionData.session?.access_token}` },
-      });
+      // Trigger score calculation for today only
+      if (isSameDay(selectedDate, today)) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        await supabase.functions.invoke("calculate-score", {
+          body: { area_id: areaId, date: selectedDateStr },
+          headers: { Authorization: `Bearer ${sessionData.session?.access_token}` },
+        });
+      }
     } catch {
-      // Revert optimistic update
       setCheckedIn((prev) => ({ ...prev, [areaId]: false }));
     } finally {
       setCheckInLoadingId(null);
+    }
+  };
+
+  // Undo check-in
+  const handleUndoCheckIn = async (areaId: string) => {
+    if (isDemo || !user) return;
+    setCheckInLoadingId(areaId);
+    setCheckedIn((prev) => ({ ...prev, [areaId]: false }));
+    try {
+      const { error } = await supabase
+        .from("checkins")
+        .delete()
+        .eq("area_id", areaId)
+        .eq("user_id", user.id)
+        .eq("date", selectedDateStr);
+      if (error) throw error;
+    } catch {
+      setCheckedIn((prev) => ({ ...prev, [areaId]: true }));
+    } finally {
+      setCheckInLoadingId(null);
+    }
+  };
+
+  // Save note
+  const handleSaveNote = async (areaId: string, content: string) => {
+    if (isDemo || !user) return;
+    const trimmed = content.trim();
+    if (trimmed.length === 0) {
+      // Delete note
+      setNotes((prev) => { const n = { ...prev }; delete n[areaId]; return n; });
+      await supabase
+        .from("activity_notes" as any)
+        .delete()
+        .eq("area_id", areaId)
+        .eq("user_id", user.id)
+        .eq("date", selectedDateStr);
+    } else {
+      setNotes((prev) => ({ ...prev, [areaId]: trimmed }));
+      await (supabase.from("activity_notes" as any) as any).upsert(
+        { area_id: areaId, user_id: user.id, date: selectedDateStr, content: trimmed },
+        { onConflict: "area_id,date,user_id" }
+      );
     }
   };
 
@@ -142,8 +253,22 @@ const Index = () => {
     <div className="flex flex-col min-h-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-14">
-        <span className="text-[18px] font-semibold"><span className="text-foreground">opad</span><span style={{ color: '#B5453A' }}>.me</span></span>
-        <span className="text-sm text-muted-foreground capitalize">{todayFormatted}</span>
+        <span className="text-[18px] font-semibold">
+          <span className="text-foreground">opad</span>
+          <span style={{ color: "#B5453A" }}>.me</span>
+        </span>
+      </div>
+
+      {/* Week selector */}
+      <div className="px-2 pb-3">
+        <WeekSelector
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          weekOffset={weekOffset}
+          onChangeWeek={(d) => setWeekOffset((o) => o + d)}
+          locale={locale}
+          checkedDates={checkedDates}
+        />
       </div>
 
       {loading ? (
@@ -168,43 +293,32 @@ const Index = () => {
         </div>
       ) : (
         <motion.div
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="flex flex-col gap-3 px-4 pb-4"
         >
           {areas.map((area) => {
-            const done = !!checkedIn[area.id];
-            const isLoading = checkInLoadingId === area.id;
-            const isGym = gymDayInfo?.areaId === area.id;
+            const isGym =
+              area.type === "health" && /^(gym|palestra)$/i.test(area.name);
+            const hasGymProgram = isGym && (gymDayInfo?.areaId === area.id) && (gymDayInfo?.hasProgram ?? false);
 
             return (
-              <div
+              <ActivityCard
                 key={area.id}
-                className="rounded-xl bg-card p-4 flex items-center justify-between gap-3 cursor-pointer active:opacity-80 transition-opacity"
-                onClick={() => navigate(`/activities/${area.id}`)}
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-base font-medium truncate">{area.name}</p>
-                  {isGym && gymDayInfo && (
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      {gymDayInfo.dayLabel}{gymDayInfo.dayName ? ` — ${gymDayInfo.dayName}` : ""} →
-                    </p>
-                  )}
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); if (!done && !isLoading) handleCheckIn(area.id); }}
-                  disabled={done || isLoading}
-                  className={`flex-shrink-0 min-h-[36px] px-4 rounded-lg text-sm font-medium border transition-all flex items-center justify-center gap-2 ${
-                    done
-                      ? "bg-primary/20 text-primary border-primary"
-                      : "bg-transparent text-foreground border-primary"
-                  } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                >
-                  {isLoading ? (
-                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  ) : done ? t("card.observed") : t("card.logToday")}
-                </button>
-              </div>
+                area={area}
+                isCheckedIn={!!checkedIn[area.id]}
+                isLoading={checkInLoadingId === area.id}
+                isFutureDay={isFutureDay}
+                onCheckIn={handleCheckIn}
+                onUndoCheckIn={handleUndoCheckIn}
+                isGym={isGym}
+                hasGymProgram={hasGymProgram}
+                gymDayLabel={gymDayInfo?.areaId === area.id ? gymDayInfo.dayLabel : undefined}
+                gymDayName={gymDayInfo?.areaId === area.id ? gymDayInfo.dayName : undefined}
+                note={notes[area.id] || ""}
+                onSaveNote={handleSaveNote}
+              />
             );
           })}
 
