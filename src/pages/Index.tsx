@@ -310,6 +310,7 @@ const Index = () => {
                 isCheckedIn={!!checkedIn[area.id]}
                 isLoading={checkInLoadingId === area.id}
                 isFutureDay={isFutureDay}
+                selectedDateStr={selectedDateStr}
                 onCheckIn={handleCheckIn}
                 onUndoCheckIn={handleUndoCheckIn}
                 isGym={isGym}

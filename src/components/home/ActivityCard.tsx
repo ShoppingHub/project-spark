@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, Pencil } from "lucide-react";
 import { useI18n } from "@/hooks/useI18n";
+import { QuantityCounter } from "./QuantityCounter";
 import type { Database } from "@/integrations/supabase/types";
 
 type Area = Database["public"]["Tables"]["areas"]["Row"];
@@ -13,6 +14,7 @@ interface ActivityCardProps {
   isCheckedIn: boolean;
   isLoading: boolean;
   isFutureDay: boolean;
+  selectedDateStr: string;
   onCheckIn: (areaId: string) => void;
   onUndoCheckIn: (areaId: string) => void;
   // Gym
@@ -30,6 +32,7 @@ export function ActivityCard({
   isCheckedIn,
   isLoading,
   isFutureDay,
+  selectedDateStr,
   onCheckIn,
   onUndoCheckIn,
   isGym,
@@ -46,19 +49,19 @@ export function ActivityCard({
   const [undoConfirm, setUndoConfirm] = useState(false);
 
   const hasNote = note.length > 0;
+  const isQuantityReduce = area.tracking_mode === "quantity_reduce" && area.show_quick_add_home;
+  const isQuantityNoQuickAdd = area.tracking_mode === "quantity_reduce" && !area.show_quick_add_home;
 
   // Determine CTA
   const handleCTAClick = () => {
     if (isFutureDay) return;
 
     if (isCheckedIn) {
-      // Show undo confirmation
       setUndoConfirm(true);
       return;
     }
 
     if (isGym && hasGymProgram) {
-      // Navigate to gym detail + auto check-in
       onCheckIn(area.id);
       navigate(`/activities/${area.id}`);
       return;
@@ -75,6 +78,32 @@ export function ActivityCard({
 
   const showGymDay = isGym && hasGymProgram && !isCheckedIn && gymDayLabel;
 
+  // Quantity reduce card with quick-add
+  if (isQuantityReduce) {
+    return (
+      <div className="rounded-xl bg-card p-4 flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <p className="text-base font-medium truncate">{area.name}</p>
+        </div>
+        <QuantityCounter areaId={area.id} date={selectedDateStr} isFutureDay={isFutureDay} />
+      </div>
+    );
+  }
+
+  // Quantity reduce card without quick-add (just navigates)
+  if (isQuantityNoQuickAdd) {
+    return (
+      <button
+        onClick={() => navigate(`/activities/${area.id}`)}
+        className="rounded-xl bg-card p-4 flex items-center justify-between w-full text-left hover:opacity-90 transition-opacity"
+      >
+        <p className="text-base font-medium truncate">{area.name}</p>
+        <span className="text-sm text-muted-foreground">›</span>
+      </button>
+    );
+  }
+
+  // Standard binary card
   return (
     <div className="rounded-xl bg-card p-4 flex flex-col gap-2">
       <div className="flex items-center justify-between gap-3">

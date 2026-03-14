@@ -55,31 +55,43 @@ export type Database = {
       areas: {
         Row: {
           archived_at: string | null
+          baseline_initial: number | null
           created_at: string
           frequency_per_week: number
           id: string
           name: string
+          show_quick_add_home: boolean
+          tracking_mode: string
           type: Database["public"]["Enums"]["area_type"]
+          unit_label: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           archived_at?: string | null
+          baseline_initial?: number | null
           created_at?: string
           frequency_per_week: number
           id?: string
           name: string
+          show_quick_add_home?: boolean
+          tracking_mode?: string
           type: Database["public"]["Enums"]["area_type"]
+          unit_label?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           archived_at?: string | null
+          baseline_initial?: number | null
           created_at?: string
           frequency_per_week?: number
           id?: string
           name?: string
+          show_quick_add_home?: boolean
+          tracking_mode?: string
           type?: Database["public"]["Enums"]["area_type"]
+          unit_label?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -343,6 +355,44 @@ export type Database = {
             columns: ["day_id"]
             isOneToOne: false
             referencedRelation: "gym_program_days"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habit_quantity_daily: {
+        Row: {
+          area_id: string
+          created_at: string
+          date: string
+          id: string
+          quantity: number
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          area_id: string
+          created_at?: string
+          date: string
+          id?: string
+          quantity?: number
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          area_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          quantity?: number
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_quantity_daily_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
             referencedColumns: ["id"]
           },
         ]
